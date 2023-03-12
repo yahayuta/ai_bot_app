@@ -15,7 +15,7 @@ spec:
         - name: OPENAI_TOKEN
           valueFrom:
             secretKeyRef:
-              name: nemf-bot-ne-client-id
+              name: openai-token
               key: '1'
         ports:
         - containerPort: 8080
@@ -24,7 +24,7 @@ spec:
           limits:
             cpu: 1000m
             memory: 512Mi
-      serviceAccountName: exec-nemf-bot@iss-service-infra.iam.gserviceaccount.com
+      serviceAccountName: ai_bot_app@yahayuta.iam.gserviceaccount.com
       timeoutSeconds: 300
   traffic:
   - latestRevision: true
