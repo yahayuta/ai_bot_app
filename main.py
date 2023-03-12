@@ -27,6 +27,8 @@ def openai_gpt():
 
 @app.route("/openai_gpt_line", methods=["POST"])
 def openai_gpt_line():
+    request_json = request.json
+    print(request_json)
     return "hoge"
 
 if __name__ == "__main__":
