@@ -9,16 +9,16 @@ AI_ENGINE = 'gpt-3.5-turbo'
 
 app = Flask(__name__)
 
-@app.route("/openai", methods=["POST"])
-def openai():
+@app.route("/openai_gpt", methods=["POST"])
+def openai_gpt():
     text = request.form["text"]
-    messages = []
+    input = []
     new_message = {"role": "user", "content": text}
-    messages.append(new_message)
+    input.append(new_message)
 
-    print(prompt)
+    print(input)
 
-    result = openai.ChatCompletion.create(model=AI_ENGINE, messages=messages)
+    result = openai.ChatCompletion.create(model=AI_ENGINE, messages=input)
 
     ai_response = result.choices[0].message.content
     print(ai_response)
