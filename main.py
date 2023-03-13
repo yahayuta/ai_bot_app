@@ -27,8 +27,28 @@ def openai_gpt():
 
 @app.route("/openai_gpt_line", methods=["POST"])
 def openai_gpt_line():
+
+    # extract line message event parameters
     request_json = request.json
     print(request_json)
+    events = request_json["events"]
+    event = events[0]
+    text = event["message"]["text"]
+    replyToken = event["replyToken"]
+
+    # building openai api parameters
+    input = []
+    new_message = {"role": "user", "content": text}
+    input.append(new_message)
+
+    print(input)
+
+    #result = openai.ChatCompletion.create(model=AI_ENGINE, messages=input)
+
+    #ai_response = result.choices[0].message.content
+
+    print(replyToken)
+
     return "hoge"
 
 if __name__ == "__main__":
