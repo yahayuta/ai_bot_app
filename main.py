@@ -12,24 +12,14 @@ AI_ENGINE = 'gpt-3.5-turbo'
 
 app = Flask(__name__)
 
-@app.route("/openai_gpt", methods=["POST"])
-def openai_gpt():
-    text = request.form["text"]
-    input = []
-    new_message = {"role": "user", "content": text}
-    input.append(new_message)
-
-    print(input)
-
-    result = openai.ChatCompletion.create(model=AI_ENGINE, messages=input)
-
-    ai_response = result.choices[0].message.content
-    print(ai_response)
-
-    return ai_response
+@app.route("/")
+def hello_world():
+    name = os.environ.get("NAME", "World")
+    return "Hello {}!".format(name)
 
 @app.route("/openai_gpt_line", methods=["POST"])
 def openai_gpt_line():
+    # register webhook endpoint this route url to line developer console
 
     # extract line message event parameters
     request_json = request.json
@@ -41,12 +31,12 @@ def openai_gpt_line():
 
     # building openai api parameters
     input = []
-    new_message = {"role": "user", "content": text}
+    new_message = {"role":"user", "content":text}
     input.append(new_message)
 
     print(input)
 
-    # send message to ai
+    # send message to openai api
     result = openai.ChatCompletion.create(model=AI_ENGINE, messages=input)
     ai_response = result.choices[0].message.content
 
@@ -55,9 +45,8 @@ def openai_gpt_line():
     # extract ai response and reply to line
     message = {"type":"text", "text":ai_response}
     messages = [message]
-    data = {"replyToken": replyToken, "messages": messages}
-    headers = {'content-type': 'application/json', 'Authorization': 'Bearer '+LINE_API_TOKEN }
-
+    data = {"replyToken":replyToken, "messages":messages}
+    headers = {'content-type':'application/json', 'Authorization':f'Bearer {LINE_API_TOKEN}'}
     res = requests.post("https://api.line.me/v2/bot/message/reply", data=json.dumps(data), headers=headers)
     print(res.json())
 
