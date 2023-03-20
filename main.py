@@ -62,6 +62,7 @@ def openai_chat(text):
 
     # send message to openai api
     result = openai.ChatCompletion.create(model=AI_ENGINE, messages=input)
+    print(result)
     return result.choices[0].message.content
 
 # send audio data
