@@ -6,6 +6,7 @@ import json
 from flask import Flask
 from flask import request
 from linebot import LineBotApi
+from google.cloud import bigquery
 
 openai.api_key = os.environ.get('OPENAI_TOKEN', '')
 LINE_API_TOKEN =  os.environ.get('LINE_API_TOKEN', '')
@@ -35,9 +36,9 @@ def openai_gpt_line():
     # check chat mode or audio trans mode
     ai_response = ""
     if "text" in type:
-        ai_response = openai_chat(event["message"]["text"])
+        ai_response = openai_chat(text=event["message"]["text"], user_id=event["source"]["userId"])
     if "audio" in type:
-        ai_response = openai_whisper(event["message"]["id"], event["source"]["userId"])
+        ai_response = openai_whisper(message_id=event["message"]["id"], user_id=event["source"]["userId"])
 
     print(replyToken)
 
@@ -52,9 +53,9 @@ def openai_gpt_line():
     return "ok"
 
 # send chat message data
-def openai_chat(text):
+def openai_chat(text, user_id):
     # building openai api parameters
-    input = []
+    input = get_log_api(user_id=user_id)
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 
@@ -63,7 +64,14 @@ def openai_chat(text):
     # send message to openai api
     result = openai.ChatCompletion.create(model=AI_ENGINE, messages=input)
     print(result)
-    return result.choices[0].message.content
+    
+    ai_response = result.choices[0].message.content
+    
+    # 会話履歴を保存
+    save_log(user_id=user_id, role="user", msg=text)
+    save_log(user_id=user_id, role="assistant", msg=ai_response)
+    
+    return ai_response
 
 # send audio data
 def openai_whisper(message_id, user_id):
@@ -85,6 +93,23 @@ def openai_whisper(message_id, user_id):
     transcription = openai.Audio.transcribe("whisper-1", file)
     # print(transcription)
     return transcription["text"]
+
+# save chat log into bigquery
+def save_log(user_id, role, msg):
+    client = bigquery.Client()
+    client.query(f'INSERT INTO app.openai_chat_log(user_id,chat,role,created) values(\'{user_id}\',\'\'\'{msg}\'\'\',\'{role}\',CURRENT_DATETIME(\'Asia/Tokyo\'))')
+
+# load chat log from bigquery
+def get_log_api(user_id):
+    client = bigquery.Client()
+    query_job = client.query(f'SELECT * FROM app.openai_chat_log where user_id = \'{user_id}\' order by created;')
+    rows = query_job.result()
+    print(rows.total_rows)
+    logs = []
+    for row in rows:
+        log = {"role": row["role"], "content": row["chat"]}
+        logs.append(log)
+    return logs
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
