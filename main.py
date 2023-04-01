@@ -67,7 +67,7 @@ def openai_chat(text, user_id):
     
     ai_response = result.choices[0].message.content
     
-    # 会話履歴を保存
+    # save chat logs with ai
     save_log(user_id=user_id, role="user", msg=text)
     save_log(user_id=user_id, role="assistant", msg=ai_response)
     
