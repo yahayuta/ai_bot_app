@@ -30,20 +30,26 @@ def openai_gpt_line():
     event = events[0]
     replyToken = event["replyToken"]
     type = event["message"]["type"]
-
+    user_id=event["source"]["userId"]
     print(type)
 
-    # check chat mode or audio trans mode
-    ai_response = ""
-    if "text" in type:
-        ai_response = openai_chat(text=event["message"]["text"], user_id=event["source"]["userId"])
+    # check chat mode or audio trans chat mode or delete all chat logs mode
+    response_text = ""
     if "audio" in type:
-        ai_response = openai_whisper(message_id=event["message"]["id"], user_id=event["source"]["userId"])
+        response_text = openai_whisper(message_id=event["message"]["id"], user_id=user_id)
+        response_text = openai_chat(text=response_text, user_id=user_id)
+    else:
+        text=event["message"]["text"]
+        if "reset" in text:
+            delete_logs(user_id=user_id)
+            response_text = "reset chat logs!"
+        elif "text" in type:
+            response_text = openai_chat(text, user_id=user_id)
 
     print(replyToken)
 
     # extract ai response and reply to line
-    message = {"type":"text", "text":ai_response}
+    message = {"type":"text", "text":response_text}
     messages = [message]
     data = {"replyToken":replyToken, "messages":messages}
     headers = {'content-type':'application/json', 'Authorization':f'Bearer {LINE_API_TOKEN}'}
@@ -55,7 +61,7 @@ def openai_gpt_line():
 # send chat message data
 def openai_chat(text, user_id):
     # building openai api parameters
-    input = get_log_api(user_id=user_id)
+    input = get_logs(user_id=user_id)
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 
@@ -100,7 +106,7 @@ def save_log(user_id, role, msg):
     client.query(f'INSERT INTO app.openai_chat_log(user_id,chat,role,created) values(\'{user_id}\',\'\'\'{msg}\'\'\',\'{role}\',CURRENT_DATETIME(\'Asia/Tokyo\'))')
 
 # load chat log from bigquery
-def get_log_api(user_id):
+def get_logs(user_id):
     client = bigquery.Client()
     query_job = client.query(f'SELECT * FROM app.openai_chat_log where user_id = \'{user_id}\' order by created;')
     rows = query_job.result()
@@ -110,6 +116,11 @@ def get_log_api(user_id):
         log = {"role": row["role"], "content": row["chat"]}
         logs.append(log)
     return logs
+
+# delete all chat log from bigquery
+def delete_logs(user_id):
+    client = bigquery.Client()
+    client.query(f'DELETE FROM app.openai_chat_log where user_id = \'{user_id}\';')
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
