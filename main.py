@@ -36,10 +36,9 @@ def openai_gpt_line():
     # check chat mode or audio trans chat mode or delete all chat logs mode
     response_text = ""
     if "audio" in type:
-        response_text = openai_whisper(message_id=event["message"]["id"], user_id=user_id)
-        # send voice transcripted text to line
-        send_msg_to_line(replyToken=replyToken, text=response_text)
-        response_text = openai_chat(text=response_text, user_id=user_id)
+        trans_text = openai_whisper(message_id=event["message"]["id"], user_id=user_id)
+        ai_text = openai_chat(text=trans_text, user_id=user_id)
+        response_text = f"Q:{trans_text}\nA:{ai_text}"
     else:
         text=event["message"]["text"]
         if "reset" in text:
