@@ -37,6 +37,8 @@ def openai_gpt_line():
     response_text = ""
     if "audio" in type:
         response_text = openai_whisper(message_id=event["message"]["id"], user_id=user_id)
+        # send voice transcripted text to line
+        send_msg_to_line(replyToken=replyToken, text=response_text)
         response_text = openai_chat(text=response_text, user_id=user_id)
     else:
         text=event["message"]["text"]
@@ -48,13 +50,8 @@ def openai_gpt_line():
 
     print(replyToken)
 
-    # extract ai response and reply to line
-    message = {"type":"text", "text":response_text}
-    messages = [message]
-    data = {"replyToken":replyToken, "messages":messages}
-    headers = {'content-type':'application/json', 'Authorization':f'Bearer {LINE_API_TOKEN}'}
-    res = requests.post("https://api.line.me/v2/bot/message/reply", data=json.dumps(data), headers=headers)
-    print(res.json())
+    # reply to line ai response
+    send_msg_to_line(replyToken=replyToken, text=response_text)
 
     return "ok"
 
@@ -121,6 +118,16 @@ def get_logs(user_id):
 def delete_logs(user_id):
     client = bigquery.Client()
     client.query(f'DELETE FROM app.openai_chat_log where user_id = \'{user_id}\';')
+
+# send messages to line through line api
+def send_msg_to_line(replyToken, text):
+    # extract ai response and reply to line
+    message = {"type":"text", "text":text}
+    messages = [message]
+    data = {"replyToken":replyToken, "messages":messages}
+    headers = {'content-type':'application/json', 'Authorization':f'Bearer {LINE_API_TOKEN}'}
+    res = requests.post("https://api.line.me/v2/bot/message/reply", data=json.dumps(data), headers=headers)
+    print(res.json())
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
