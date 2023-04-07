@@ -31,7 +31,7 @@ def openai_gpt_line():
     replyToken = event["replyToken"]
     type = event["message"]["type"]
     user_id=event["source"]["userId"]
-    print(type)
+    # print(type)
 
     # check chat mode or audio trans chat mode or delete all chat logs mode
     response_text = ""
@@ -48,6 +48,7 @@ def openai_gpt_line():
             response_text = openai_chat(text, user_id=user_id)
 
     print(replyToken)
+    print(response_text)
 
     # reply to line ai response
     send_msg_to_line(replyToken=replyToken, text=response_text)
@@ -65,10 +66,11 @@ def openai_chat(text, user_id):
 
     # send message to openai api
     result = openai.ChatCompletion.create(model=AI_ENGINE, messages=input)
-    print(result)
+    # print(result)
     
     ai_response = result.choices[0].message.content
-    
+    # print(ai_response)
+
     # save chat logs with ai
     save_log(user_id=user_id, role="user", msg=text)
     save_log(user_id=user_id, role="assistant", msg=ai_response)
