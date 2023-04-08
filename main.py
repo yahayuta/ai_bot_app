@@ -10,6 +10,8 @@ from google.cloud import bigquery
 
 openai.api_key = os.environ.get('OPENAI_TOKEN', '')
 LINE_API_TOKEN =  os.environ.get('LINE_API_TOKEN', '')
+FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
+FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
 AI_ENGINE = 'gpt-3.5-turbo'
 
 app = Flask(__name__)
@@ -18,6 +20,48 @@ app = Flask(__name__)
 def hello_world():
     name = os.environ.get("NAME", "World")
     return "Hello {}!".format(name)
+
+@app.route('/openai_gpt_facebook', methods=['GET'])
+def verify():
+    # Facebook requires a challenge token to verify the webhook
+    challenge = request.args.get('hub.challenge')
+    if FACEBOOK_PAGE_VERIFY_TOKEN == request.args.get('hub.verify_token'):
+        return challenge
+    else:
+        return "Invalid verification token"
+
+@app.route('/openai_gpt_facebook', methods=['POST'])
+def webhook():
+    data = request.get_json()
+    if data['object'] == 'page':
+        for entry in data['entry']:
+            for messaging_event in entry['messaging']:
+                # Check if the message is a text message
+                if messaging_event.get('message'):
+                    sender_id = messaging_event['sender']['id']
+                    message_text = messaging_event['message']['text']
+                    send_message(sender_id, "Hello! I received your message: " + message_text)
+    return "ok", 200
+
+def send_message(recipient_id, message_text):
+    params = {
+        "access_token": FACEBOOK_PAGE_ACCESS_TOKEN
+    }
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = json.dumps({
+        "recipient": {
+            "id": recipient_id
+        },
+        "message": {
+            "text": message_text
+        }
+    })
+    r = requests.post("https://graph.facebook.com/v12.0/me/messages", params=params, headers=headers, data=data)
+    if r.status_code != 200:
+        print(r.status_code)
+        print(r.text)
 
 @app.route("/openai_gpt_line", methods=["POST"])
 def openai_gpt_line():
