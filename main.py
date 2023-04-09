@@ -22,7 +22,7 @@ def hello_world():
     return "Hello {}!".format(name)
 
 @app.route('/openai_gpt_facebook', methods=['GET'])
-def verify():
+def openai_gpt_facebook_verify():
     # Facebook requires a challenge token to verify the webhook
     challenge = request.args.get('hub.challenge')
     if FACEBOOK_PAGE_VERIFY_TOKEN == request.args.get('hub.verify_token'):
@@ -31,7 +31,7 @@ def verify():
         return "Invalid verification token"
 
 @app.route('/openai_gpt_facebook', methods=['POST'])
-def webhook():
+def openai_gpt_facebook_webhook():
     data = request.get_json()
     if data['object'] == 'page':
         for entry in data['entry']:
@@ -40,9 +40,18 @@ def webhook():
                 if messaging_event.get('message'):
                     sender_id = messaging_event['sender']['id']
                     message_text = messaging_event['message']['text']
-                    send_message(sender_id, "Hello! I received your message: " + message_text)
+
+                    # send message to openai
+                    if "reset" in message_text:
+                        delete_logs(user_id=sender_id)
+                        message_text = "reset chat logs!"
+                    else:
+                        message_text = openai_chat(text=message_text, user_id=sender_id)
+        
+                    send_message(sender_id, message_text)
     return "ok", 200
 
+# send message by facebook api
 def send_message(recipient_id, message_text):
     params = {
         "access_token": FACEBOOK_PAGE_ACCESS_TOKEN
