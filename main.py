@@ -5,11 +5,11 @@ import json
 import threading
 import facebook
 import datetime
+import model_openai_chat_log
 
 from flask import Flask
 from flask import request
 from linebot import LineBotApi
-from google.cloud import bigquery
 
 openai.api_key = os.environ.get('OPENAI_TOKEN', '')
 LINE_API_TOKEN =  os.environ.get('LINE_API_TOKEN', '')
@@ -146,7 +146,7 @@ def openai_gpt_line():
     else:
         text=event["message"]["text"]
         if "reset" in text:
-            delete_logs(user_id=user_id)
+            model_openai_chat_log.delete_logs(user_id=user_id)
             response_text = "reset chat logs!"
         elif "text" in type:
             response_text = openai_chat(text, user_id=user_id)
@@ -162,7 +162,7 @@ def openai_gpt_line():
 # send chat message data
 def openai_chat(text, user_id):
     # building openai api parameters
-    input = get_logs(user_id=user_id)
+    input = model_openai_chat_log.get_logs(user_id=user_id)
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 
@@ -176,8 +176,8 @@ def openai_chat(text, user_id):
     # print(ai_response)
 
     # save chat logs with ai
-    save_log(user_id=user_id, role="user", msg=text)
-    save_log(user_id=user_id, role="assistant", msg=ai_response)
+    model_openai_chat_log.save_log(user_id=user_id, role="user", msg=text)
+    model_openai_chat_log.save_log(user_id=user_id, role="assistant", msg=ai_response)
     
     return ai_response
 
@@ -201,28 +201,6 @@ def openai_whisper(message_id, user_id):
     transcription = openai.Audio.transcribe("whisper-1", file)
     # print(transcription)
     return transcription["text"]
-
-# save chat log into bigquery
-def save_log(user_id, role, msg):
-    client = bigquery.Client()
-    client.query(f'INSERT INTO app.openai_chat_log(user_id,chat,role,created) values(\'{user_id}\',\'\'\'{msg}\'\'\',\'{role}\',CURRENT_DATETIME(\'Asia/Tokyo\'))')
-
-# load chat log from bigquery
-def get_logs(user_id):
-    client = bigquery.Client()
-    query_job = client.query(f'SELECT * FROM app.openai_chat_log where user_id = \'{user_id}\' order by created;')
-    rows = query_job.result()
-    print(rows.total_rows)
-    logs = []
-    for row in rows:
-        log = {"role": row["role"], "content": row["chat"]}
-        logs.append(log)
-    return logs
-
-# delete all chat log from bigquery
-def delete_logs(user_id):
-    client = bigquery.Client()
-    client.query(f'DELETE FROM app.openai_chat_log where user_id = \'{user_id}\';')
 
 # send messages to line through line api
 def send_msg_to_line(replyToken, text):
