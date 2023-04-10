@@ -2,6 +2,7 @@ import os
 import requests
 import openai
 import json
+import threading
 
 from flask import Flask
 from flask import request
@@ -32,6 +33,12 @@ def openai_gpt_facebook_verify():
 
 @app.route('/openai_gpt_facebook', methods=['POST'])
 def openai_gpt_facebook_webhook():
+    print(request.headers)
+    # if 'X-Hub-Signature' in request.headers:
+    #     # This is a retry, handle accordingly
+    #     print('This is a retry')
+    #     return 'Retry', 200
+
     data = request.get_json()
     if data['object'] == 'page':
         for entry in data['entry']:
@@ -40,16 +47,23 @@ def openai_gpt_facebook_webhook():
                 if messaging_event.get('message'):
                     sender_id = messaging_event['sender']['id']
                     message_text = messaging_event['message']['text']
+                    # making thread for openai handling to avoid retry
+                    subthread = threading.Thread(target=handle_message_facebook, args=(message_text, sender_id))
+                    subthread.start()
 
-                    # send message to openai
-                    if "reset" in message_text:
-                        delete_logs(user_id=sender_id)
-                        message_text = "reset chat logs!"
-                    else:
-                        message_text = openai_chat(text=message_text, user_id=sender_id)
-        
-                    send_message(sender_id, message_text)
     return "ok", 200
+
+# handle facebook message by webhook
+def handle_message_facebook(message_text, sender_id):
+    print(message_text)
+    # send message to openai
+    if "reset" in message_text:
+        delete_logs(user_id=sender_id)
+        message_text = "reset chat logs!"
+    else:
+        message_text = openai_chat(text=message_text, user_id=sender_id)
+    print(message_text)
+    send_message(sender_id, message_text)
 
 # send message by facebook api
 def send_message(recipient_id, message_text):
