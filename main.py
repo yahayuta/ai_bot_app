@@ -3,6 +3,7 @@ import requests
 import openai
 import json
 import threading
+import facebook
 
 from flask import Flask
 from flask import request
@@ -13,6 +14,8 @@ openai.api_key = os.environ.get('OPENAI_TOKEN', '')
 LINE_API_TOKEN =  os.environ.get('LINE_API_TOKEN', '')
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
+FACEBOOK_PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID', '')
+
 AI_ENGINE = 'gpt-3.5-turbo'
 
 app = Flask(__name__)
@@ -21,6 +24,30 @@ app = Flask(__name__)
 def hello_world():
     name = os.environ.get("NAME", "World")
     return "Hello {}!".format(name)
+
+@app.route("/openai_gpt_facebook_autopost")
+def openai_gpt_facebook_autopost():
+    # make openai parameter
+    input = []
+    text = '10年前の今日について日本で起きた出来事を教えてください'
+    new_message = {"role":"user", "content":text}
+    input.append(new_message)
+
+    # send message to openai api
+    result = openai.ChatCompletion.create(model=AI_ENGINE, messages=input)    
+    ai_response = result.choices[0].message.content
+    print(ai_response)
+
+    # Initialize a Facebook Graph API object
+    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
+
+    # Make a post to the Facebook page
+    graph.put_object(
+        parent_object=FACEBOOK_PAGE_ID,
+        connection_name='feed',
+        message=ai_response
+    )
+    return "ok", 200
 
 @app.route('/openai_gpt_facebook', methods=['GET'])
 def openai_gpt_facebook_verify():
@@ -34,10 +61,6 @@ def openai_gpt_facebook_verify():
 @app.route('/openai_gpt_facebook', methods=['POST'])
 def openai_gpt_facebook_webhook():
     print(request.headers)
-    # if 'X-Hub-Signature' in request.headers:
-    #     # This is a retry, handle accordingly
-    #     print('This is a retry')
-    #     return 'Retry', 200
 
     data = request.get_json()
     if data['object'] == 'page':
@@ -50,7 +73,7 @@ def openai_gpt_facebook_webhook():
                     # making thread for openai handling to avoid retry
                     subthread = threading.Thread(target=handle_message_facebook, args=(message_text, sender_id))
                     subthread.start()
-
+    print("finish request")
     return "ok", 200
 
 # handle facebook message by webhook
