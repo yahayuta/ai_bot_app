@@ -29,21 +29,9 @@ def hello_world():
 @app.route("/openai_gpt_facebook_autopost")
 def openai_gpt_facebook_autopost():
 
-    # get current date and make to string
-    current_date = datetime.date.today()
-    current_date_str = current_date.strftime('%Y-%m-%d')
-    print("Current date:", current_date_str)
-
-    # from year string to minus 10
-    year_minus_10 = int(current_date_str[:4]) - 10
-
-    # make string built to year(minus 10) + month + day
-    new_date_str = str(year_minus_10) + current_date_str[4:]
-    print("New date:", new_date_str)
-
     # make openai parameter
     input = []
-    text = f'{new_date_str}に日本で起こった主要な出来事をまとめてください。それを日本語と英語それぞれで表現してください。それぞれ最初にその日付は宣言してください。'
+    text = 'pick one famous japanese musician or group or band then talk about it in japanese'
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 

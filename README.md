@@ -1,7 +1,7 @@
 # ai_bot_app
 
 python source code for utilizing openai api  
-example line bot app communicating with chatgpt ai engine  
+example line and facebook bot app communicating with chatgpt ai engine  
 
 deploy to gcp cloud run  
 project should be that you defined on your environment  
