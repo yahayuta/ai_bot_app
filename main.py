@@ -4,7 +4,7 @@ import openai
 import json
 import threading
 import facebook
-import datetime
+import random
 import model_openai_chat_log
 
 from flask import Flask
@@ -21,17 +21,22 @@ AI_ENGINE = 'gpt-3.5-turbo'
 
 app = Flask(__name__)
 
-@app.route("/")
-def hello_world():
-    name = os.environ.get("NAME", "World")
-    return "Hello {}!".format(name)
+topic = [
+   "musician or group or band",
+   "movie",
+   "drama",
+   "place"
+]
 
 @app.route("/openai_gpt_facebook_autopost")
 def openai_gpt_facebook_autopost():
 
+    # pick topic randomly
+    picked_topic = random.choice(topic)
+
     # make openai parameter
     input = []
-    text = 'pick one famous japanese musician or group or band then talk about it in japanese'
+    text = f'pick one famous japanese {picked_topic} then talk about it in japanese'
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 
