@@ -6,6 +6,7 @@ import threading
 import facebook
 import random
 import model_openai_chat_log
+import base64
 
 from flask import Flask
 from flask import request
@@ -27,6 +28,46 @@ topic = [
    "drama",
    "place"
 ]
+
+@app.route("/openai_gpt_facebook_autopost_image")
+def openai_gpt_facebook_autopost_image():
+
+    # pick topic randomly
+    picked_topic = random.choice(topic)
+
+    # make openai parameter
+    input = []
+    text = f'pick one famous japanese {picked_topic} then talk about it in japanese'
+    new_message = {"role":"user", "content":text}
+    input.append(new_message)
+
+    # send message to openai api
+    result = openai.ChatCompletion.create(model=AI_ENGINE, messages=input)    
+    ai_response = result.choices[0].message.content
+    print(ai_response)
+
+    response = openai.Image.create(
+        prompt=ai_response,
+        n=1,
+        size="512x512",
+        response_format="b64_json",
+    )
+
+    image_path = f"image_{FACEBOOK_PAGE_ID}.png"
+    for data, n in zip(response["data"], range(1)):
+        img_data = base64.b64decode(data["b64_json"])
+        with open(image_path, "wb") as f:
+            f.write(img_data)
+
+    # Initialize a Facebook Graph API object
+    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
+
+    # Open the image file to be uploaded
+    with open(image_path, 'rb') as image:
+        # Upload the image to Facebook and get its ID
+        photo = graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=ai_response)
+
+    return "ok", 200
 
 @app.route("/openai_gpt_facebook_autopost")
 def openai_gpt_facebook_autopost():
@@ -88,7 +129,7 @@ def handle_message_facebook(message_text, sender_id):
     print(message_text)
     # send message to openai
     if "reset" in message_text:
-        delete_logs(user_id=sender_id)
+        model_openai_chat_log.delete_logs(user_id=sender_id)
         message_text = "reset chat logs!"
     else:
         message_text = openai_chat(text=message_text, user_id=sender_id)
