@@ -77,7 +77,7 @@ def openai_gpt_facebook_autopost():
 
     # make openai parameter
     input = []
-    text = f'pick one famous japanese {picked_topic} then talk about it in japanese'
+    text = f'pick one famous {picked_topic} all over the world then talk about it in japanese'
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 
