@@ -26,7 +26,13 @@ topic = [
    "musician or group or band",
    "movie",
    "drama",
-   "place"
+   "place",
+   "politician",
+   "athlete",
+   "comedian",
+   "actor",
+   "actress",
+   "city"
 ]
 
 @app.route("/openai_gpt_facebook_autopost_image")
