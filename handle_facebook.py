@@ -50,7 +50,7 @@ def openai_gpt_facebook_autopost_image():
     response = module_openai.openai_create_image(ai_response)
 
     # save image as file
-    image_path = f"image_{FACEBOOK_PAGE_ID}.png"
+    image_path = f"/tmp/image_{FACEBOOK_PAGE_ID}.png"
     for data, n in zip(response["data"], range(1)):
         img_data = base64.b64decode(data["b64_json"])
         with open(image_path, "wb") as f:

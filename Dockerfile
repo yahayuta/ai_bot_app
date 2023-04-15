@@ -34,6 +34,7 @@ RUN pip install openai
 RUN pip install line-bot-sdk
 RUN pip install --upgrade google-cloud-bigquery
 RUN pip install facebook-sdk
+RUN pip install google-cloud-storage
 
 # Run the web service on container startup. Here we use the gunicorn
 # webserver, with one worker process and 8 threads.

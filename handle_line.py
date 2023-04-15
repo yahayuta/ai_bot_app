@@ -3,10 +3,13 @@ import requests
 import json
 import model_openai_chat_log
 import module_openai
+import base64
+import time
 
 from flask import request
 from linebot import LineBotApi
 from flask import Blueprint
+from google.cloud import storage
 
 LINE_API_TOKEN =  os.environ.get('LINE_API_TOKEN', '')
 
@@ -31,6 +34,7 @@ def openai_gpt_line():
 
     # check chat mode or audio trans chat mode or delete all chat logs mode
     response_text = ""
+    image_url = ""
     if "audio" in type:
 
         # use line sdk library to get audio file
@@ -48,8 +52,32 @@ def openai_gpt_line():
     else:
         text=event["message"]["text"]
         if "reset" in text:
+            # delete all chat log from bigquery
             model_openai_chat_log.delete_logs(user_id=user_id)
             response_text = "reset chat logs!"
+        elif "genimg" in text:
+
+            try:
+                # generate image by openai
+                response = module_openai.openai_create_image(text.replace("genimg", ""))
+
+                # save image as file
+                image_path = f"/tmp/image_{user_id}.png"
+                for data, n in zip(response["data"], range(1)):
+                    img_data = base64.b64decode(data["b64_json"])
+                    with open(image_path, "wb") as f:
+                        f.write(img_data)
+
+                current_time = int(time.time())
+                current_time_string = str(current_time)
+
+                # Uploads a file to the Google Cloud Storage bucket
+                image_url = upload_to_bucket(current_time_string, image_path, "ai-bot-app")
+                print(image_url)
+            except Exception as e:
+                error_message = str(e)
+                response_text = f"System Error!!!{error_message}"
+
         elif "text" in type:
             response_text = module_openai.openai_chat(text, user_id=user_id)
 
@@ -57,7 +85,12 @@ def openai_gpt_line():
     print(response_text)
 
     # extract ai response and reply to line
-    message = {"type":"text", "text":response_text}
+    message = {}
+    if response_text != "":
+        message = {"type":"text", "text":response_text}
+    elif image_url != "":
+        message = {"type":"image", "originalContentUrl":image_url, "previewImageUrl":image_url}
+
     messages = [message]
     data = {"replyToken":replyToken, "messages":messages}
     headers = {'content-type':'application/json', 'Authorization':f'Bearer {LINE_API_TOKEN}'}
@@ -66,3 +99,20 @@ def openai_gpt_line():
 
     return "ok"
 
+#  Uploads a file to the Google Cloud Storage bucket
+def upload_to_bucket(blob_name, file_path, bucket_name):
+    # Create a Cloud Storage client
+    storage_client = storage.Client()
+
+    # Get the bucket that the file will be uploaded to
+    bucket = storage_client.bucket(bucket_name)
+
+    # Create a new blob and upload the file's content
+    blob = bucket.blob(blob_name)
+    blob.upload_from_filename(file_path)
+
+    # Make the blob publicly viewable
+    blob.make_public()
+
+    # Return the public URL of the uploaded file
+    return blob.public_url
