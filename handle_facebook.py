@@ -10,10 +10,12 @@ import module_openai
 
 from flask import request
 from flask import Blueprint
+from newsapi import NewsApiClient
 
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
 FACEBOOK_PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID', '')
+NEWS_API_KEY = os.environ.get('NEWS_API_KEY', '')
 
 facebook_app = Blueprint('handle_facebook', __name__)
 
@@ -29,6 +31,44 @@ topic = [
    "actress",
    "city"
 ]
+
+@facebook_app.route("/openai_gpt_facebook_autopost_news")
+def openai_gpt_facebook_autopost_news():
+
+    # initialize NewsApiClient with your API key
+    newsapi = NewsApiClient(api_key=NEWS_API_KEY)
+
+    # get top headlines in Japan in Japanese language
+    top_headlines = newsapi.get_top_headlines(country='us')
+
+    news = ""
+    # print each article's title and description
+    for article in top_headlines['articles']:
+        if article['description'] is not None:
+            news += article['description']
+
+    # make openai parameter
+    input = []
+    text = f'summarize following topics in japanese:{news}'
+    print(text)
+    new_message = {"role":"user", "content":text}
+    input.append(new_message)
+
+    # send message to openai api
+    ai_response = module_openai.openai_chat_completion(chat=input)
+    print(ai_response)
+
+    # Initialize a Facebook Graph API object
+    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
+
+    news_sum = f"アメリカ最新ニューストピック：\n{ai_response}"
+    # Make a post to the Facebook page
+    graph.put_object(
+        parent_object=FACEBOOK_PAGE_ID,
+        connection_name='feed',
+        message=news_sum
+    )
+    return "ok", 200
 
 @facebook_app.route("/openai_gpt_facebook_autopost_image")
 def openai_gpt_facebook_autopost_image():
