@@ -43,13 +43,13 @@ def openai_gpt_facebook_autopost_news():
 
     news = ""
     # print each article's title and description
-    for article in top_headlines['articles']:
+    for idx, article in enumerate(top_headlines['articles']):
         if article['description'] is not None:
-            news += article['description']
+            news += f"\n{idx + 1}.{article['description']}"
 
     # make openai parameter
     input = []
-    text = f'summarize following topics in japanese:{news}'
+    text = f'translate to japanese following:{news}'
     print(text)
     new_message = {"role":"user", "content":text}
     input.append(new_message)
