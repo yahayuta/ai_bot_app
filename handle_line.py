@@ -99,6 +99,28 @@ def openai_gpt_line():
 
     return "ok"
 
+@line_app.route('/remove_bucket_imgs', methods=['GET'])
+def remove_bucket_imgs():
+    # Delete all files from a Google Cloud Storage bucket.
+    delete_bucket_files("ai-bot-app")
+    return "ok", 200
+
+# Delete all files from a Google Cloud Storage bucket.
+def delete_bucket_files(bucket_name):
+    # Create a Cloud Storage client
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+
+    # List all blobs in the bucket
+    blobs = bucket.list_blobs()
+
+    # Delete each blob in the bucket
+    for blob in blobs:
+        blob.delete()
+        print(f"Deleted {blob.name}.")
+
+    print(f"All files in {bucket_name} have been deleted.")
+
 #  Uploads a file to the Google Cloud Storage bucket
 def upload_to_bucket(blob_name, file_path, bucket_name):
     # Create a Cloud Storage client
