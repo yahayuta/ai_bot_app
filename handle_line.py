@@ -5,13 +5,18 @@ import model_openai_chat_log
 import module_openai
 import base64
 import time
+import io
 
 from flask import request
 from linebot import LineBotApi
 from flask import Blueprint
 from google.cloud import storage
+from PIL import Image
+from stability_sdk import client
+import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 
 LINE_API_TOKEN =  os.environ.get('LINE_API_TOKEN', '')
+STABILITY_KEY = os.environ.get('STABILITY_KEY', '')
 
 AI_ENGINE = 'gpt-3.5-turbo'
 
@@ -77,6 +82,25 @@ def openai_gpt_line():
             except Exception as e:
                 error_message = str(e)
                 response_text = f"System Error!!!{error_message}"
+
+        elif "genimgsd" in text:
+            # generate image by stability
+            stability_api = client.StabilityInference(key=STABILITY_KEY, verbose=True)
+            answers = stability_api.generate(prompt=text.replace("genimgsd", ""))
+
+            # save image as file
+            image_path = f"/tmp/image_{user_id}.png"
+            for resp in answers:
+                for artifact in resp.artifacts:
+                    if artifact.finish_reason == generation.FILTER:
+                        print("NSFW")
+                    if artifact.type == generation.ARTIFACT_IMAGE:
+                        img = Image.open(io.BytesIO(artifact.binary))
+                        img.save(image_path)
+
+            # Uploads a file to the Google Cloud Storage bucket
+            image_url = upload_to_bucket(current_time_string, image_path, "ai-bot-app")
+            print(image_url)
 
         elif "text" in type:
             response_text = module_openai.openai_chat(text, user_id=user_id)
