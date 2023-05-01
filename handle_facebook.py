@@ -32,6 +32,15 @@ topic = [
    "city"
 ]
 
+place = [
+    "North America",
+    "South America",
+    "Asia",
+    "Europe",
+    "Africa",
+    "Oceania"
+]
+
 @facebook_app.route("/openai_gpt_facebook_autopost_news")
 def openai_gpt_facebook_autopost_news():
 
@@ -75,10 +84,11 @@ def openai_gpt_facebook_autopost_image():
 
     # pick topic randomly
     picked_topic = random.choice(topic)
+    picked_place = random.choice(place)
 
     # make openai parameter
     input = []
-    text = f'pick one famous japanese {picked_topic} then talk about it in japanese'
+    text = f'pick one {picked_topic} in {picked_place} countries then talk about it in japanese'
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 
