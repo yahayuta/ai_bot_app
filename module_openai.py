@@ -9,12 +9,16 @@ AI_ENGINE = 'gpt-3.5-turbo'
 # send audio data
 def openai_whisper(file_path):
     print(file_path)
-
-    # load audio file to openai
-    file = open(file_path, "rb")
-    transcription = openai.Audio.transcribe("whisper-1", file)
-    # print(transcription)
-    return transcription["text"]
+    ai_response = ''
+    try:
+        # load audio file to openai
+        file = open(file_path, "rb")
+        transcription = openai.Audio.transcribe("whisper-1", file)
+        # print(transcription)
+        ai_response = transcription["text"]
+    except openai.Error as e:
+        ai_response = f"OpenAI returns system Error, try your question again: {e}"
+    return ai_response
 
 # send chat message data
 def openai_chat(text, user_id):
@@ -36,16 +40,23 @@ def openai_chat(text, user_id):
 
 # generate image by openai
 def openai_create_image(prompt):
-    response = openai.Image.create(
-        prompt=prompt,
-        n=1,
-        size="512x512",
-        response_format="b64_json",
-    )
+    try:
+        response = openai.Image.create(
+            prompt=prompt,
+            n=1,
+            size="512x512",
+            response_format="b64_json",
+        )
+    except openai.Error as e:
+        print(f"Error: {e}")
     return response
 
 # send message to openai api
 def openai_chat_completion(chat):
-    result = openai.ChatCompletion.create(model=AI_ENGINE, messages=chat)
-    ai_response = result.choices[0].message.content
+    ai_response = ''
+    try:
+        result = openai.ChatCompletion.create(model=AI_ENGINE, messages=chat)
+        ai_response = result.choices[0].message.content
+    except openai.Error as e:
+        ai_response = f"ChatGPT returns system Error, try your question again: {e}"
     return ai_response   
