@@ -89,7 +89,7 @@ def openai_gpt_facebook_autopost_image():
 
     # make openai parameter
     input = []
-    text = f'pick one {picked_topic} in {picked_place} countries then talk about it in japanese'
+    text = f'pick one {picked_topic} in {picked_place} countries then talk about it in japanese very shortly'
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 
@@ -97,11 +97,11 @@ def openai_gpt_facebook_autopost_image():
     ai_response = module_openai.openai_chat_completion(chat=input)
     print(ai_response)
 
-   # traslate from japanese to english for image creation prompt
-   translator = Translator()
-   translated = translator.translate(ai_response, src='ja', dest='en')
-   print(translated)
-   translated_en = translated.text
+    # traslate from japanese to english for image creation prompt
+    translator = Translator()
+    translated = translator.translate(ai_response, src='ja', dest='en')
+    print(translated)
+    translated_en = translated.text
 
     # generate image by openai
     response = module_openai.openai_create_image(translated_en)

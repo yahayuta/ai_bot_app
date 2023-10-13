@@ -16,7 +16,7 @@ def openai_whisper(file_path):
         transcription = openai.Audio.transcribe("whisper-1", file)
         # print(transcription)
         ai_response = transcription["text"]
-    except openai.Error as e:
+    except Exception as e:
         ai_response = f"OpenAI returns system Error, try your question again: {e}"
     return ai_response
 
@@ -47,8 +47,8 @@ def openai_create_image(prompt):
             size="512x512",
             response_format="b64_json",
         )
-    except openai.Error as e:
-        print(f"Error: {e}")
+    except Exception as e:
+        print(f"An error occurred while creating the image: {e}")
     return response
 
 # send message to openai api
@@ -57,6 +57,6 @@ def openai_chat_completion(chat):
     try:
         result = openai.ChatCompletion.create(model=AI_ENGINE, messages=chat)
         ai_response = result.choices[0].message.content
-    except openai.Error as e:
+    except Exception as e:
         ai_response = f"ChatGPT returns system Error, try your question again: {e}"
     return ai_response   
