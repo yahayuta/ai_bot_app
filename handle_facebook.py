@@ -11,6 +11,7 @@ import module_openai
 from flask import request
 from flask import Blueprint
 from newsapi import NewsApiClient
+from googletrans import Translator
 
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
@@ -96,8 +97,14 @@ def openai_gpt_facebook_autopost_image():
     ai_response = module_openai.openai_chat_completion(chat=input)
     print(ai_response)
 
+   # traslate from japanese to english for image creation prompt
+   translator = Translator()
+   translated = translator.translate(ai_response, src='ja', dest='en')
+   print(translated)
+   translated_en = translated.text
+
     # generate image by openai
-    response = module_openai.openai_create_image(ai_response)
+    response = module_openai.openai_create_image(translated_en)
 
     # save image as file
     image_path = f"/tmp/image_{FACEBOOK_PAGE_ID}.png"
