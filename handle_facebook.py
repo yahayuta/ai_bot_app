@@ -5,7 +5,6 @@ import threading
 import facebook
 import random
 import model_openai_chat_log
-import base64
 import module_openai
 
 from flask import request
@@ -107,12 +106,12 @@ def openai_gpt_facebook_autopost_image():
     response = module_openai.openai_create_image(translated_en)
 
     # save image as file
+    url = response.data[0].url
+    response = requests.get(url)
     image_path = f"/tmp/image_{FACEBOOK_PAGE_ID}.png"
-    for data, n in zip(response["data"], range(1)):
-        img_data = base64.b64decode(data["b64_json"])
-        with open(image_path, "wb") as f:
-            f.write(img_data)
-
+    with open(image_path, 'wb') as file:
+        file.write(response.content)
+        
     # Initialize a Facebook Graph API object
     graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
 

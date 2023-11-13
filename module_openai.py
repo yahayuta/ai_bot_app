@@ -1,10 +1,11 @@
 import os
-import openai
 import model_openai_chat_log
 
-openai.api_key = os.environ.get('OPENAI_TOKEN', '')
+from openai import OpenAI
 
-AI_ENGINE = 'gpt-3.5-turbo'
+client = OpenAI(api_key=os.environ.get('OPENAI_TOKEN', ''))
+
+AI_ENGINE = 'gpt-3.5-turbo-1106'
 
 # send audio data
 def openai_whisper(file_path):
@@ -13,7 +14,7 @@ def openai_whisper(file_path):
     try:
         # load audio file to openai
         file = open(file_path, "rb")
-        transcription = openai.Audio.transcribe("whisper-1", file)
+        transcription = client.audio.transcriptions.create("whisper-1", file)
         # print(transcription)
         ai_response = transcription["text"]
     except Exception as e:
@@ -41,11 +42,11 @@ def openai_chat(text, user_id):
 # generate image by openai
 def openai_create_image(prompt):
     try:
-        response = openai.Image.create(
+        response = client.images.generate(
+            model="dall-e-3",
             prompt=prompt,
             n=1,
-            size="512x512",
-            response_format="b64_json",
+            size="1024x1024",
         )
     except Exception as e:
         print(f"An error occurred while creating the image: {e}")
@@ -55,7 +56,7 @@ def openai_create_image(prompt):
 def openai_chat_completion(chat):
     ai_response = ''
     try:
-        result = openai.ChatCompletion.create(model=AI_ENGINE, messages=chat)
+        result = client.chat.completions.create(model=AI_ENGINE, messages=chat)
         ai_response = result.choices[0].message.content
     except Exception as e:
         ai_response = f"ChatGPT returns system Error, try your question again: {e}"
