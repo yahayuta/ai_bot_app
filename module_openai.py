@@ -60,4 +60,29 @@ def openai_chat_completion(chat):
         ai_response = result.choices[0].message.content
     except Exception as e:
         ai_response = f"ChatGPT returns system Error, try your question again: {e}"
-    return ai_response   
+    return ai_response
+
+# vision api making image details
+def openai_vision(prompt, image_url):
+    response = client.chat.completions.create(
+        model="gpt-4-vision-preview",
+        messages=[
+            {
+            "role": "user",
+            "content": [
+                {
+                "type": "text",
+                "text": f"What are in this image? The image title tells that {prompt}. Your answer must be Japanese.",
+                },
+                {
+                "type": "image_url",
+                "image_url": {
+                    "url": image_url,
+                },
+                },
+            ],
+            }
+        ],
+        max_tokens=1000,
+    )
+    return response.choices[0].message.content;

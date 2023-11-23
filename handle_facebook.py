@@ -10,7 +10,6 @@ import module_openai
 from flask import request
 from flask import Blueprint
 from newsapi import NewsApiClient
-from translate import Translator
 
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
@@ -88,7 +87,7 @@ def openai_gpt_facebook_autopost_image():
 
     # make openai parameter
     input = []
-    text = f'pick one {picked_topic} in {picked_place} countries then talk about it in japanese very shortly'
+    text = f'pick one {picked_topic} in {picked_place} countries then talk about it very shortly'
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 
@@ -96,12 +95,8 @@ def openai_gpt_facebook_autopost_image():
     ai_response = module_openai.openai_chat_completion(chat=input)
     print(ai_response)
 
-    # traslate from japanese to english for image creation prompt
-    translator = Translator(from_lang = "ja", to_lang = "en")
-    translated_en = translator.translate(ai_response)
-
     # generate image by openai
-    response = module_openai.openai_create_image(translated_en)
+    response = module_openai.openai_create_image(ai_response)
 
     # save image as file
     url = response.data[0].url
@@ -109,7 +104,10 @@ def openai_gpt_facebook_autopost_image():
     image_path = f"/tmp/image_{FACEBOOK_PAGE_ID}.png"
     with open(image_path, 'wb') as file:
         file.write(response.content)
-        
+    
+    # openai vision api making image details
+    ai_response = module_openai.openai_vision(ai_response, url)
+
     # Initialize a Facebook Graph API object
     graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
 
