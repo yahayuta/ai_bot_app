@@ -148,14 +148,19 @@ def openai_gpt_facebook_webhook():
 # handle facebook message by webhook
 def handle_message_facebook(message_text, sender_id):
     print(message_text)
+    reply_text = ""
     # send message to openai
     if "reset" in message_text:
         model_openai_chat_log.delete_logs(user_id=sender_id)
-        message_text = "reset chat logs!"
+        reply_text = "reset chat logs!"
     else:
-        message_text = module_openai.openai_chat(text=message_text, user_id=sender_id)
-    print(message_text)
-    send_message(sender_id, message_text)
+        reply_text = module_openai.openai_chat(text=message_text, user_id=sender_id)
+    print(reply_text)
+    send_message(sender_id, reply_text)
+
+    # save chat logs with ai
+    model_openai_chat_log.save_log(user_id=sender_id, role="user", msg=reply_text)
+    model_openai_chat_log.save_log(user_id=sender_id, role="assistant", msg=reply_text)
 
 # send message by facebook api
 def send_message(recipient_id, message_text):

@@ -33,9 +33,7 @@ def openai_chat(text, user_id):
     # send message to openai api
     ai_response = openai_chat_completion(chat=input)
 
-    # save chat logs with ai
-    model_openai_chat_log.save_log(user_id=user_id, role="user", msg=text)
-    model_openai_chat_log.save_log(user_id=user_id, role="assistant", msg=ai_response)
+    print(ai_response)
 
     return ai_response
 
