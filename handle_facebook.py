@@ -6,15 +6,20 @@ import facebook
 import random
 import model_openai_chat_log
 import module_openai
+import io
 
 from flask import request
 from flask import Blueprint
 from newsapi import NewsApiClient
+from PIL import Image
+from stability_sdk import client
+import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
 FACEBOOK_PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID', '')
 NEWS_API_KEY = os.environ.get('NEWS_API_KEY', '')
+STABILITY_KEY = os.environ.get('STABILITY_KEY', '')
 
 facebook_app = Blueprint('handle_facebook', __name__)
 
@@ -38,6 +43,106 @@ place = [
     "Europe",
     "Africa",
     "Oceania"
+]
+
+cartoons = [
+    "Naruto",
+    "Dragon Ball Z",
+    "One Piece",
+    "Sailor Moon",
+    "Pokémon",
+    "Attack on Titan",
+    "My Hero Academia",
+    "Death Note",
+    "Fullmetal Alchemist",
+    "Bleach",
+    "Neon Genesis Evangelion",
+    "Cowboy Bebop",
+    "Spirited Away",
+    "Demon Slayer: Kimetsu no Yaiba",
+    "Tokyo Ghoul",
+    "One Punch Man",
+    "Hunter x Hunter",
+    "Fairy Tail",
+    "JoJo's Bizarre Adventure",
+    "Yu Yu Hakusho",
+    "Mob Psycho 100",
+    "Akira",
+    "Your Name",
+    "Sword Art Online",
+    "Naruto Shippuden",
+    "Death Parade",
+    "Ghost in the Shell",
+    "Ranma ½",
+    "Black Clover",
+    "Digimon",
+    "Initial D",
+    "Gurren Lagann",
+    "Inuyasha",
+    "Cardcaptor Sakura",
+    "Gintama",
+    "The Promised Neverland",
+    "Parasyte -the maxim-",
+    "Code Geass",
+    "Trigun",
+    "Rurouni Kenshin",
+    "Kill la Kill",
+    "Wolf's Rain",
+    "Fate/stay night",
+    "Berserk",
+    "Tokyo Mew Mew",
+    "Slam Dunk",
+    "Detective Conan (Case Closed)",
+    "Doraemon",
+    "Astro Boy",
+    "Kimba the White Lion (Jungle Emperor)",
+    "Speed Racer (Mach GoGoGo)",
+    "Heidi, Girl of the Alps",
+    "Princess Knight (Ribon no Kishi)",
+    "Sazae-san",
+    "Lupin III",
+    "Cyborg 009",
+    "Gatchaman (Science Ninja Team Gatchaman)",
+    "Dragon Ball",
+    "Mazinger Z",
+    "Candy Candy",
+    "Getter Robo",
+    "Space Battleship Yamato (Star Blazers)",
+    "Tiger Mask",
+    "GeGeGe no Kitaro",
+    "Jungle Emperor Leo (Leo the Lion)",
+    "Obake no Q-tarō",
+    "Akage no Anne (Anne of Green Gables)",
+    "Princess Sarah (A Little Princess Sara)",
+    "Galaxy Express 999",
+    "The Rose of Versailles (Versailles no Bara)",
+    "Devilman",
+    "Future Boy Conan",
+    "Tetsujin 28-go (Gigantor)",
+    "Urusei Yatsura (Lum Invader)",
+    "The Adventures of Hutch the Honeybee",
+    "Dokonjō Gaeru (The Gutsy Frog)",
+    "Captain Tsubasa",
+    "Maison Ikkoku",
+    "Nausicaä of the Valley of the Wind",
+    "Kinnikuman (Muscle Man)",
+    "Science Ninja Team Gatchaman",
+    "Lupin III: Part II",
+    "Ganbare!! Tabuchi-kun!!",
+    "Sally the Witch (Mahōtsukai Sarī)",
+    "Yatterman",
+    "Himitsu no Akko-chan (Secret Akko-chan)",
+    "The Snow Queen",
+    "Panda! Go, Panda!",
+    "Space Pirate Captain Harlock",
+    "Dokaben",
+    "Tensai Bakabon",
+    "Combattler V",
+    "Casshan",
+    "Cutie Honey",
+    "Magical Princess Minky Momo",
+    "Gekisou! Rubenkaiser",
+    "Hana no Ko Lunlun"
 ]
 
 @facebook_app.route("/openai_gpt_facebook_autopost_news")
@@ -114,7 +219,40 @@ def openai_gpt_facebook_autopost_image():
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
         # Upload the image to Facebook and get its ID
-        photo = graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=ai_response)
+        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=ai_response)
+
+    return "ok", 200
+
+@facebook_app.route("/stability_facebook_autopost_image")
+def stability_facebook_autopost_image():
+
+    # pick topic randomly
+    cartoon = random.choice(cartoons)
+
+    # generate image by stability
+    stability_api = client.StabilityInference(key=STABILITY_KEY, verbose=True)
+    answers = stability_api.generate(prompt=cartoon)
+
+    # save image as file
+    image_path = f"/tmp/image_{cartoon}.png"
+    for resp in answers:
+        for artifact in resp.artifacts:
+            if artifact.finish_reason == generation.FILTER:
+                print("NSFW")
+            if artifact.type == generation.ARTIFACT_IMAGE:
+                img = Image.open(io.BytesIO(artifact.binary))
+                img.save(image_path)
+
+    # openai vision api making image details
+    #ai_response = module_openai.openai_vision(cartoon, url)
+
+    # Initialize a Facebook Graph API object
+    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
+
+    # Open the image file to be uploaded
+    with open(image_path, 'rb') as image:
+        # Upload the image to Facebook and get its ID
+        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=cartoon)
 
     return "ok", 200
 
