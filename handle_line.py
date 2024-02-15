@@ -40,8 +40,11 @@ def openai_gpt_line():
     # check chat mode or audio trans chat mode or delete all chat logs mode
     response_text = ""
     image_url = ""
-    if "audio" in type:
 
+    current_time = int(time.time())
+    current_time_string = str(current_time)
+    
+    if "audio" in type:
         # use line sdk library to get audio file
         line_bot_api = LineBotApi(LINE_API_TOKEN)
         message_content = line_bot_api.get_message_content(message_id)
@@ -60,29 +63,6 @@ def openai_gpt_line():
             # delete all chat log from bigquery
             model_openai_chat_log.delete_logs(user_id=user_id)
             response_text = "reset chat logs!"
-        elif "genimg" in text:
-
-            try:
-                # generate image by openai
-                response = module_openai.openai_create_image(text.replace("genimg", ""))
-
-                # save image as file
-                image_path = f"/tmp/image_{user_id}.png"
-                for data, n in zip(response["data"], range(1)):
-                    img_data = base64.b64decode(data["b64_json"])
-                    with open(image_path, "wb") as f:
-                        f.write(img_data)
-
-                current_time = int(time.time())
-                current_time_string = str(current_time)
-
-                # Uploads a file to the Google Cloud Storage bucket
-                image_url = handle_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
-                print(image_url)
-            except Exception as e:
-                error_message = str(e)
-                response_text = f"System Error!!!{error_message}"
-
         elif "genimgsd" in text:
             # generate image by stability
             stability_api = client.StabilityInference(key=STABILITY_KEY, verbose=True)
@@ -101,7 +81,24 @@ def openai_gpt_line():
             # Uploads a file to the Google Cloud Storage bucket
             image_url = handle_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
             print(image_url)
+        elif "genimg" in text:
+            try:
+                # generate image by openai
+                response = module_openai.openai_create_image(text.replace("genimg", ""))
 
+                # save image as file
+                url = response.data[0].url
+                response = requests.get(url)
+                image_path = f"/tmp/image_{user_id}.png"
+                with open(image_path, 'wb') as file:
+                    file.write(response.content)
+
+                # Uploads a file to the Google Cloud Storage bucket
+                image_url = handle_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
+                print(image_url)
+            except Exception as e:
+                error_message = str(e)
+                response_text = f"System Error!!!{error_message}"
         elif "text" in type:
             response_text = module_openai.openai_chat(text, user_id=user_id)
 

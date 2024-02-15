@@ -304,6 +304,8 @@ def stability_facebook_autopost_image():
 
     prompt = f"{cartoon}, {pattern}"
 
+    print(prompt)
+
     # generate image by stability
     stability_api = client.StabilityInference(key=STABILITY_KEY, verbose=True)
     answers = stability_api.generate(prompt=prompt)
@@ -324,8 +326,13 @@ def stability_facebook_autopost_image():
     # Uploads a file to the Google Cloud Storage bucket
     image_url = handle_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
 
+    print(image_path)
+    print(image_url)
+
     # openai vision api making image details
     ai_response = module_openai.openai_vision(prompt, image_url)
+
+    print(ai_response)
 
     # Initialize a Facebook Graph API object
     graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
