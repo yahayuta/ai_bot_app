@@ -145,6 +145,74 @@ cartoons = [
     "Hana no Ko Lunlun"
 ]
 
+patterns = [
+    "illustration",
+    "stencil art",
+    "crayon",
+    "crayon art",
+    "chalk",
+    "chalk art",
+    "etching",
+    "oil paintings",
+    "ballpoint pen",
+    "ballpoint pen art",
+    "colored pencil",
+    "watercolor",
+    "Chinese watercolor",
+    "pastels",
+    "woodcut",
+    "charcoal",
+    "line drawing",
+    "screen print",
+    "photocollage",
+    "storybook illustration",
+    "newspaper cartoon",
+    "vintage illustration from 1960s",
+    "vintage illustration from 1980s",
+    "anime style",
+    "anime style, official art",
+    "manga style",
+    "Studio Ghibli style",
+    "kawaii",
+    "pixel art",
+    "screenshot from SNES game",
+    "vector illustration",
+    "sticker art",
+    "3D illustration",
+    "cute 3D illustration in the style of Pixar",
+    "Octane Render",
+    "digital art",
+    "2.5D",
+    "isometric art",
+    "ceramic art",
+    "geometric art",
+    "surrealism",
+    "Dadaism",
+    "metaphysical painting",
+    "orphism",
+    "cubism",
+    "suprematism",
+    "De Stijl",
+    "futurism",
+    "expressionism",
+    "realism",
+    "impressionism",
+    "Art Nouveau",
+    "baroque painting",
+    "rococo painting",
+    "mannerism painting",
+    "bauhaus painting",
+    "ancient Egyptian papyrus",
+    "ancient Roman mosaic",
+    "ukiyo-e",
+    "painted in the style of Vincent van Gogh",
+    "painted in the style of Alphonse Mucha",
+    "painted in the style of Sophie Anderson",
+    "painting by Vincent van Gogh",
+    "painting by Alphonse Mucha",
+    "painting by Sophie Anderson",  
+]
+
 @facebook_app.route("/openai_gpt_facebook_autopost_news")
 def openai_gpt_facebook_autopost_news():
 
@@ -228,10 +296,13 @@ def stability_facebook_autopost_image():
 
     # pick topic randomly
     cartoon = random.choice(cartoons)
+    pattern = random.choice(patterns)
+
+    prompt = f"{cartoon}, {pattern}"
 
     # generate image by stability
     stability_api = client.StabilityInference(key=STABILITY_KEY, verbose=True)
-    answers = stability_api.generate(prompt=cartoon)
+    answers = stability_api.generate(prompt=prompt)
 
     # save image as file
     image_path = f"/tmp/image_{cartoon}.png"
@@ -244,7 +315,7 @@ def stability_facebook_autopost_image():
                 img.save(image_path)
 
     # openai vision api making image details
-    #ai_response = module_openai.openai_vision(cartoon, url)
+    #ai_response = module_openai.openai_vision(prompt, url)
 
     # Initialize a Facebook Graph API object
     graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
@@ -252,7 +323,7 @@ def stability_facebook_autopost_image():
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
         # Upload the image to Facebook and get its ID
-        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=cartoon)
+        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=prompt)
 
     return "ok", 200
 
