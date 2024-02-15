@@ -6,11 +6,11 @@ import module_openai
 import base64
 import time
 import io
+import handle_gcp_storage
 
 from flask import request
 from linebot import LineBotApi
 from flask import Blueprint
-from google.cloud import storage
 from PIL import Image
 from stability_sdk import client
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
@@ -77,7 +77,7 @@ def openai_gpt_line():
                 current_time_string = str(current_time)
 
                 # Uploads a file to the Google Cloud Storage bucket
-                image_url = upload_to_bucket(current_time_string, image_path, "ai-bot-app")
+                image_url = handle_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
                 print(image_url)
             except Exception as e:
                 error_message = str(e)
@@ -99,7 +99,7 @@ def openai_gpt_line():
                         img.save(image_path)
 
             # Uploads a file to the Google Cloud Storage bucket
-            image_url = upload_to_bucket(current_time_string, image_path, "ai-bot-app")
+            image_url = handle_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
             print(image_url)
 
         elif "text" in type:
@@ -126,39 +126,5 @@ def openai_gpt_line():
 @line_app.route('/remove_bucket_imgs', methods=['GET'])
 def remove_bucket_imgs():
     # Delete all files from a Google Cloud Storage bucket.
-    delete_bucket_files("ai-bot-app")
+    handle_gcp_storage.delete_bucket_files("ai-bot-app")
     return "ok", 200
-
-# Delete all files from a Google Cloud Storage bucket.
-def delete_bucket_files(bucket_name):
-    # Create a Cloud Storage client
-    storage_client = storage.Client()
-    bucket = storage_client.bucket(bucket_name)
-
-    # List all blobs in the bucket
-    blobs = bucket.list_blobs()
-
-    # Delete each blob in the bucket
-    for blob in blobs:
-        blob.delete()
-        print(f"Deleted {blob.name}.")
-
-    print(f"All files in {bucket_name} have been deleted.")
-
-#  Uploads a file to the Google Cloud Storage bucket
-def upload_to_bucket(blob_name, file_path, bucket_name):
-    # Create a Cloud Storage client
-    storage_client = storage.Client()
-
-    # Get the bucket that the file will be uploaded to
-    bucket = storage_client.bucket(bucket_name)
-
-    # Create a new blob and upload the file's content
-    blob = bucket.blob(blob_name)
-    blob.upload_from_filename(file_path)
-
-    # Make the blob publicly viewable
-    blob.make_public()
-
-    # Return the public URL of the uploaded file
-    return blob.public_url

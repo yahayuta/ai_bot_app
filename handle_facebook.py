@@ -7,6 +7,8 @@ import random
 import model_openai_chat_log
 import module_openai
 import io
+import time
+import handle_gcp_storage
 
 from flask import request
 from flask import Blueprint
@@ -14,6 +16,7 @@ from newsapi import NewsApiClient
 from PIL import Image
 from stability_sdk import client
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
+from google.cloud import storage
 
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
@@ -249,6 +252,7 @@ def openai_gpt_facebook_autopost_news():
         connection_name='feed',
         message=news_sum
     )
+
     return "ok", 200
 
 @facebook_app.route("/openai_gpt_facebook_autopost_image")
@@ -304,8 +308,11 @@ def stability_facebook_autopost_image():
     stability_api = client.StabilityInference(key=STABILITY_KEY, verbose=True)
     answers = stability_api.generate(prompt=prompt)
 
+    current_time = int(time.time())
+    current_time_string = str(current_time)
+    
     # save image as file
-    image_path = f"/tmp/image_{cartoon}.png"
+    image_path = f"/tmp/image_{current_time_string}.png"
     for resp in answers:
         for artifact in resp.artifacts:
             if artifact.finish_reason == generation.FILTER:
@@ -314,8 +321,11 @@ def stability_facebook_autopost_image():
                 img = Image.open(io.BytesIO(artifact.binary))
                 img.save(image_path)
 
+    # Uploads a file to the Google Cloud Storage bucket
+    image_url = handle_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
+
     # openai vision api making image details
-    #ai_response = module_openai.openai_vision(prompt, url)
+    ai_response = module_openai.openai_vision(prompt, image_url)
 
     # Initialize a Facebook Graph API object
     graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
@@ -323,7 +333,7 @@ def stability_facebook_autopost_image():
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
         # Upload the image to Facebook and get its ID
-        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=prompt)
+        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=ai_response)
 
     return "ok", 200
 
