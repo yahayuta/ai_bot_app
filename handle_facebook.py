@@ -8,7 +8,7 @@ import model_openai_chat_log
 import module_openai
 import io
 import time
-import handle_gcp_storage
+import module_gcp_storage
 
 from flask import request
 from flask import Blueprint
@@ -324,7 +324,7 @@ def stability_facebook_autopost_image():
                 img.save(image_path)
 
     # Uploads a file to the Google Cloud Storage bucket
-    image_url = handle_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
+    image_url = module_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
 
     print(image_path)
     print(image_url)
