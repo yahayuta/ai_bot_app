@@ -46,9 +46,9 @@ def openai_create_image(prompt):
             n=1,
             size="1024x1024",
         )
+        return response
     except Exception as e:
         print(f"An error occurred while creating the image: {e}")
-    return response
 
 # send message to openai api
 def openai_chat_completion(chat):
