@@ -1,4 +1,5 @@
 import os
+import requests
 import model_openai_chat_log
 
 from openai import OpenAI
@@ -9,7 +10,6 @@ AI_ENGINE = 'gpt-3.5-turbo-1106'
 
 # send audio data
 def openai_whisper(file_path):
-    print(file_path)
     ai_response = ''
     try:
         # load audio file to openai
@@ -38,15 +38,22 @@ def openai_chat(text, user_id):
     return ai_response
 
 # generate image by openai
-def openai_create_image(prompt):
+def openai_create_image(prompt, image_path):
     try:
-        response = client.images.generate(
+        response_openai = client.images.generate(
             model="dall-e-3",
             prompt=prompt,
             n=1,
             size="1024x1024",
         )
-        return response
+
+        # save image as file
+        url = response_openai.data[0].url
+        response = requests.get(url)
+        with open(image_path, 'wb') as file:
+            file.write(response.content)
+
+        return response_openai
     except Exception as e:
         print(f"An error occurred while creating the image: {e}")
 

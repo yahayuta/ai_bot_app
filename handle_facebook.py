@@ -4,24 +4,20 @@ import json
 import threading
 import facebook
 import random
+import time
 import model_openai_chat_log
 import module_openai
-import io
-import time
 import module_gcp_storage
+import module_stability
 
 from flask import request
 from flask import Blueprint
 from newsapi import NewsApiClient
-from PIL import Image
-from stability_sdk import client
-import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
 FACEBOOK_PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID', '')
 NEWS_API_KEY = os.environ.get('NEWS_API_KEY', '')
-STABILITY_KEY = os.environ.get('STABILITY_KEY', '')
 
 facebook_app = Blueprint('handle_facebook', __name__)
 
@@ -272,17 +268,11 @@ def openai_gpt_facebook_autopost_image():
     print(ai_response)
 
     # generate image by openai
-    response = module_openai.openai_create_image(ai_response)
-
-    # save image as file
-    url = response.data[0].url
-    response = requests.get(url)
     image_path = f"/tmp/image_{FACEBOOK_PAGE_ID}.png"
-    with open(image_path, 'wb') as file:
-        file.write(response.content)
+    response = module_openai.openai_create_image(ai_response, image_path)
     
     # openai vision api making image details
-    ai_response = module_openai.openai_vision(ai_response, url)
+    ai_response = module_openai.openai_vision(ai_response, response.data[0].url)
 
     # Initialize a Facebook Graph API object
     graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
@@ -306,21 +296,10 @@ def stability_facebook_autopost_image():
     print(prompt)
 
     # generate image by stability
-    stability_api = client.StabilityInference(key=STABILITY_KEY, verbose=True)
-    answers = stability_api.generate(prompt=prompt)
-
     current_time = int(time.time())
     current_time_string = str(current_time)
-    
-    # save image as file
     image_path = f"/tmp/image_{current_time_string}.png"
-    for resp in answers:
-        for artifact in resp.artifacts:
-            if artifact.finish_reason == generation.FILTER:
-                print("NSFW")
-            if artifact.type == generation.ARTIFACT_IMAGE:
-                img = Image.open(io.BytesIO(artifact.binary))
-                img.save(image_path)
+    module_stability.generate(prompt, image_path)
 
     # Uploads a file to the Google Cloud Storage bucket
     image_url = module_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")

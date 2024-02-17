@@ -62,21 +62,16 @@ def openai_gpt_line():
             # generate image by stability
             image_path = f"/tmp/image_{user_id}.png"
             module_stability.generate(text.replace("genimgsd", ""), image_path)
+
             # Uploads a file to the Google Cloud Storage bucket
             image_url = module_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
             print(image_url)
         elif "genimg" in text:
             try:
-                # generate image by openai
-                response = module_openai.openai_create_image(text.replace("genimg", ""))
-
-                # save image as file
-                url = response.data[0].url
-                response = requests.get(url)
+                # generate image by openai   
                 image_path = f"/tmp/image_{user_id}.png"
-                with open(image_path, 'wb') as file:
-                    file.write(response.content)
-
+                module_openai.openai_create_image(text.replace("genimg", ""), image_path)
+                
                 # Uploads a file to the Google Cloud Storage bucket
                 image_url = module_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
                 print(image_url)
