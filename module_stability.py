@@ -7,6 +7,7 @@ from PIL import Image
 
 STABILITY_KEY = os.environ.get('STABILITY_KEY', '')
 
+# generate image by stability api
 def generate(prompt, image_path):
     stability_api = client.StabilityInference(key=STABILITY_KEY, verbose=True)
     answers = stability_api.generate(prompt=prompt)
