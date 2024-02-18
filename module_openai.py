@@ -14,11 +14,17 @@ def openai_whisper(file_path):
     try:
         # load audio file to openai
         file = open(file_path, "rb")
-        transcription = client.audio.transcriptions.create("whisper-1", file)
-        # print(transcription)
-        ai_response = transcription["text"]
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1", 
+            file=file
+        )
+        print(transcription)
+        ai_response = transcription.text
     except Exception as e:
+        print(e)
         ai_response = f"OpenAI returns system Error, try your question again: {e}"
+        
+    print(ai_response)
     return ai_response
 
 # send chat message data
