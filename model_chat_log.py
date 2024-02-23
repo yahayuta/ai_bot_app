@@ -17,6 +17,18 @@ def get_logs(user_id):
         logs.append(log)
     return logs
 
+# load chat log from bigquery for gemini
+def get_logs_gemini(user_id):
+    client = bigquery.Client()
+    query_job = client.query(f'SELECT * FROM app.openai_chat_log where user_id = \'{user_id}\' order by created;')
+    rows = query_job.result()
+    print(rows.total_rows)
+    logs = []
+    for row in rows:
+        log = {"role": row["role"], "content": [row["chat"]]}
+        logs.append(log)
+    return logs
+
 # delete all chat log from bigquery
 def delete_logs(user_id):
     client = bigquery.Client()

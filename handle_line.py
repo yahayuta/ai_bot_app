@@ -1,7 +1,7 @@
 import os
 import requests
 import json
-import model_openai_chat_log
+import model_chat_log
 import module_openai
 import time
 import module_gcp_storage
@@ -56,7 +56,7 @@ def openai_gpt_line():
         text=event["message"]["text"]
         if "reset" in text:
             # delete all chat log from bigquery
-            model_openai_chat_log.delete_logs(user_id=user_id)
+            model_chat_log.delete_logs(user_id=user_id)
             response_text = "reset chat logs!"
         elif "genimgsd" in text:
             # generate image by stability

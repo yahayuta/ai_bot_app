@@ -5,11 +5,12 @@ import threading
 import facebook
 import random
 import time
-import model_openai_chat_log
+import model_chat_log
 import module_openai
 import module_gcp_storage
 import module_stability
 import module_common
+import module_gemini
 
 from flask import request
 from flask import Blueprint
@@ -168,16 +169,16 @@ def handle_message_facebook(message_text, sender_id):
     reply_text = ""
     # send message to openai
     if "reset" in message_text:
-        model_openai_chat_log.delete_logs(user_id=sender_id)
+        model_chat_log.delete_logs(user_id=sender_id)
         reply_text = "reset chat logs!"
     else:
-        reply_text = module_openai.openai_chat(text=message_text, user_id=sender_id)
+        reply_text = module_gemini.gemini_chat(text=message_text, user_id=sender_id)
     print(reply_text)
     send_message(sender_id, reply_text)
 
     # save chat logs with ai
-    model_openai_chat_log.save_log(user_id=sender_id, role="user", msg=reply_text)
-    model_openai_chat_log.save_log(user_id=sender_id, role="assistant", msg=reply_text)
+    model_chat_log.save_log(user_id=sender_id, role="user", msg=reply_text)
+    model_chat_log.save_log(user_id=sender_id, role="model", msg=reply_text)
 
 # send message by facebook api
 def send_message(recipient_id, message_text):

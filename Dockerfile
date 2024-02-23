@@ -37,6 +37,7 @@ RUN pip install facebook-sdk
 RUN pip install google-cloud-storage
 RUN pip install newsapi-python
 RUN pip install stability-sdk
+RUN pip install google-generativeai
 
 # Run the web service on container startup. Here we use the gunicorn
 # webserver, with one worker process and 8 threads.

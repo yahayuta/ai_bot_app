@@ -1,6 +1,6 @@
 import os
 import requests
-import model_openai_chat_log
+import model_chat_log
 
 from openai import OpenAI
 
@@ -30,7 +30,7 @@ def openai_whisper(file_path):
 # send chat message data
 def openai_chat(text, user_id):
     # building openai api parameters
-    input = model_openai_chat_log.get_logs(user_id=user_id)
+    input = model_chat_log.get_logs(user_id=user_id)
     new_message = {"role":"user", "content":text}
     input.append(new_message)
 
