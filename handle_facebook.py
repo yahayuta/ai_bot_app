@@ -1,7 +1,6 @@
 import os
 import requests
 import json
-import threading
 import facebook
 import random
 import time
@@ -22,8 +21,6 @@ FACEBOOK_PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID', '')
 NEWS_API_KEY = os.environ.get('NEWS_API_KEY', '')
 
 facebook_app = Blueprint('handle_facebook', __name__)
-
-
 
 @facebook_app.route("/openai_gpt_facebook_autopost_news")
 def openai_gpt_facebook_autopost_news():
@@ -147,19 +144,17 @@ def openai_gpt_facebook_verify():
 
 @facebook_app.route('/openai_gpt_facebook', methods=['POST'])
 def openai_gpt_facebook_webhook():
-    print(request.headers)
-
+    # print(request.headers)
     data = request.get_json()
+    print(data)
     if data['object'] == 'page':
         for entry in data['entry']:
             for messaging_event in entry['messaging']:
                 # Check if the message is a text message
-                if messaging_event.get('message'):
+                if messaging_event.get('message') and 'text' in messaging_event['message']:
                     sender_id = messaging_event['sender']['id']
                     message_text = messaging_event['message']['text']
-                    # making thread for openai handling to avoid retry
-                    subthread = threading.Thread(target=handle_message_facebook, args=(message_text, sender_id))
-                    subthread.start()
+                    handle_message_facebook(message_text, sender_id)
     print("finish request")
     return "ok", 200
 
@@ -173,12 +168,12 @@ def handle_message_facebook(message_text, sender_id):
         reply_text = "reset chat logs!"
     else:
         reply_text = module_gemini.gemini_chat(text=message_text, user_id=sender_id)
+        # save chat logs with ai
+        model_chat_log.save_log(user_id=sender_id, role="user", msg=message_text)
+        model_chat_log.save_log(user_id=sender_id, role="model", msg=reply_text)
+
     print(reply_text)
     send_message(sender_id, reply_text)
-
-    # save chat logs with ai
-    model_chat_log.save_log(user_id=sender_id, role="user", msg=reply_text)
-    model_chat_log.save_log(user_id=sender_id, role="model", msg=reply_text)
 
 # send message by facebook api
 def send_message(recipient_id, message_text):

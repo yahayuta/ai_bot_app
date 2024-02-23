@@ -43,8 +43,13 @@ model = genai.GenerativeModel(model_name="gemini-1.0-pro",
 
 # send chat message data
 def gemini_chat(text, user_id):
-    history = model_chat_log.get_logs(user_id=user_id)
-    convo = model.start_chat(history=history)
-    convo.send_message(text)
-    print(convo.last.text)
-    return convo.last.text
+    try:
+      history = model_chat_log.get_logs(user_id=user_id)
+      print(history)
+      convo = model.start_chat(history=history)
+      convo.send_message(text)
+      print(convo.last.text)
+      return convo.last.text
+    except Exception as e:
+        print(e)
+        return f"Gemini returns system Error, try your question again: {e}"
