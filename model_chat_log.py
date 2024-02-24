@@ -25,7 +25,7 @@ def get_logs_gemini(user_id):
     print(rows.total_rows)
     logs = []
     for row in rows:
-        log = {"role": row["role"], "content": [row["chat"]]}
+        log = {"role": row["role"], "parts": [row["chat"]]}
         logs.append(log)
     return logs
 
