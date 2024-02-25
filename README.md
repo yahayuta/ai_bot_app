@@ -1,6 +1,6 @@
 # ai_bot_app
 
-python source code for utilizing openai, gemini, stable diffusion api  
+python source code for utilizing openai, gemini pro, stable diffusion api  
 example line and facebook bot app communicating with llms  
 
 deploy to gcp cloud run  
