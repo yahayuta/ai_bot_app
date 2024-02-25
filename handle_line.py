@@ -52,6 +52,10 @@ def openai_gpt_line():
         trans_text = module_openai.openai_whisper(file_path)
         ai_text = module_openai.openai_chat(text=trans_text, user_id=user_id)
         response_text = f"Q:{trans_text}\nA:{ai_text}"
+
+        # save chat logs
+        model_chat_log.save_log(user_id=user_id, role="user", message=trans_text)
+        model_chat_log.save_log(user_id=user_id, role="assistant", message=ai_text)
     else:
         text=event["message"]["text"]
         if "reset" in text:
@@ -80,6 +84,10 @@ def openai_gpt_line():
                 response_text = f"System Error!!!{error_message}"
         elif "text" in type:
             response_text = module_openai.openai_chat(text, user_id=user_id)
+            
+            # save chat logs
+            model_chat_log.save_log(user_id=user_id, role="user", message=text)
+            model_chat_log.save_log(user_id=user_id, role="assistant", message=response_text)
 
     print(replyToken)
     print(response_text)

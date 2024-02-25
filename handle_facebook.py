@@ -169,8 +169,8 @@ def handle_message_facebook(message_text, sender_id):
     else:
         reply_text = module_gemini.gemini_chat(text=message_text, user_id=sender_id)
         # save chat logs with ai
-        model_chat_log.save_log(user_id=sender_id, role="user", msg=message_text)
-        model_chat_log.save_log(user_id=sender_id, role="model", msg=reply_text)
+        model_chat_log.save_log(user_id=sender_id, role="user", message=message_text)
+        model_chat_log.save_log(user_id=sender_id, role="model", message=reply_text)
 
     print(reply_text)
     send_message(sender_id, reply_text)
