@@ -44,8 +44,10 @@ model = genai.GenerativeModel(model_name="gemini-1.0-pro",
 # send chat message data
 def gemini_chat(text, user_id):
     try:
+      # get chat history from database
       history = model_chat_log.get_logs_gemini(user_id=user_id)
       print(history)
+      # send prompt and extract result
       convo = model.start_chat(history=history)
       convo.send_message(text)
       print(convo.last.text)
