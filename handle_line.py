@@ -106,9 +106,3 @@ def openai_gpt_line():
     print(res.json())
 
     return "ok"
-
-@line_app.route('/remove_bucket_imgs', methods=['GET'])
-def remove_bucket_imgs():
-    # Delete all files from a Google Cloud Storage bucket.
-    module_gcp_storage.delete_bucket_files("ai-bot-app")
-    return "ok", 200
