@@ -6,7 +6,7 @@ from openai import OpenAI
 
 client = OpenAI(api_key=os.environ.get('OPENAI_TOKEN', ''))
 
-AI_ENGINE = 'gpt-3.5-turbo-1106'
+AI_ENGINE = 'gpt-4o'
 
 # send audio data
 def openai_whisper(file_path):
