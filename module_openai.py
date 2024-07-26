@@ -6,7 +6,7 @@ from openai import OpenAI
 
 client = OpenAI(api_key=os.environ.get('OPENAI_TOKEN', ''))
 
-AI_ENGINE = 'gpt-4o'
+AI_ENGINE = 'gpt-4o-mini'
 
 # send audio data
 def openai_whisper(file_path):
@@ -76,7 +76,7 @@ def openai_chat_completion(chat):
 # vision api making image details
 def openai_vision(prompt, image_url):
     response = client.chat.completions.create(
-        model="gpt-4-vision-preview",
+        model="gpt-4o-mini",
         messages=[
             {
             "role": "user",
