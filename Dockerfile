@@ -35,7 +35,6 @@ RUN pip install line-bot-sdk
 RUN pip install --upgrade google-cloud-bigquery
 RUN pip install facebook-sdk
 RUN pip install google-cloud-storage
-RUN pip install newsapi-python
 RUN pip install stability-sdk
 RUN pip install google-generativeai
 

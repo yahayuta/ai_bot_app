@@ -1,7 +1,7 @@
 import os
-import requests
+import requests # type: ignore
 import json
-import facebook
+import facebook # type: ignore
 import random
 import time
 import model_chat_log
@@ -11,37 +11,25 @@ import module_stability
 import module_common
 import module_gemini
 
-from flask import request
-from flask import Blueprint
-from newsapi import NewsApiClient
+from flask import request # type: ignore
+from flask import Blueprint # type: ignore
 
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
 FACEBOOK_PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID', '')
-NEWS_API_KEY = os.environ.get('NEWS_API_KEY', '')
 
 facebook_app = Blueprint('handle_facebook', __name__)
 
 @facebook_app.route("/openai_gpt_facebook_autopost_news")
 def openai_gpt_facebook_autopost_news():
 
-    # initialize NewsApiClient with your API key
-    newsapi = NewsApiClient(api_key=NEWS_API_KEY)
-
-    # get top headlines in Japan in Japanese language
-    top_headlines = newsapi.get_top_headlines(country='us')
-
-    news = ""
-    # print each article's title and description
-    for idx, article in enumerate(top_headlines['articles']):
-        if article['description'] is not None:
-            news += f"\n{idx + 1}.{article['description']}"
-
-    # make openai parameter
-    input = []
-    text = f'translate to japanese following:{news}'
-    print(text)
+    url = "https://news.google.com/rss"
+    response = requests.get(url)
+    # Get the response content as a string
+    result = response.text
+    text = f'summarize in japanese following:{result}'
     new_message = {"role":"user", "content":text}
+    input = []
     input.append(new_message)
 
     # send message to openai api
@@ -51,7 +39,7 @@ def openai_gpt_facebook_autopost_news():
     # Initialize a Facebook Graph API object
     graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
 
-    news_sum = f"アメリカ最新ニューストピック：\n{ai_response}"
+    news_sum = f"最新ニューストピック：\n{ai_response}"
     # Make a post to the Facebook page
     graph.put_object(
         parent_object=FACEBOOK_PAGE_ID,
