@@ -121,6 +121,44 @@ def stability_facebook_autopost_image():
 
     return "ok", 200
 
+@facebook_app.route("/gemini_facebook_autopost_image")
+def gemini_facebook_autopost_image():
+
+    # pick topic randomly
+    cartoon = random.choice(module_common.cartoons)
+    pattern = random.choice(module_common.patterns)
+
+    prompt = f"{cartoon}, {pattern}"
+
+    print(prompt)
+
+    # generate image by stability
+    current_time = int(time.time())
+    current_time_string = str(current_time)
+    image_path = f"/tmp/image_{current_time_string}.png"
+    module_gemini.exec_imagen(prompt, image_path)
+
+    # Uploads a file to the Google Cloud Storage bucket
+    image_url = module_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
+
+    print(image_path)
+    print(image_url)
+
+    # openai vision api making image details
+    ai_response = module_openai.openai_vision(prompt, image_url)
+
+    print(ai_response)
+
+    # Initialize a Facebook Graph API object
+    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
+
+    # Open the image file to be uploaded
+    with open(image_path, 'rb') as image:
+        # Upload the image to Facebook and get its ID
+        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=ai_response)
+
+    return "ok", 200
+
 @facebook_app.route('/openai_gpt_facebook', methods=['GET'])
 def openai_gpt_facebook_verify():
     # Facebook requires a challenge token to verify the webhook

@@ -6,9 +6,13 @@ $ pip install google-generativeai
 
 import os
 import model_chat_log
-import google.generativeai as genai
+import google.generativeai as google_genai # type: ignore
 
-genai.configure(api_key=os.environ.get('GEMINI_TOKEN', ''))
+from google import genai
+from io import BytesIO
+from PIL import Image # type: ignore
+
+google_genai.configure(api_key=os.environ.get('GEMINI_TOKEN', ''))
 
 # Set up the model
 generation_config = {
@@ -37,7 +41,7 @@ safety_settings = [
   },
 ]
 
-model = genai.GenerativeModel(model_name="gemini-1.0-pro",
+model = google_genai.GenerativeModel(model_name="gemini-1.0-pro",
                               generation_config=generation_config,
                               safety_settings=safety_settings)
 
@@ -55,3 +59,23 @@ def gemini_chat(text, user_id):
     except Exception as e:
         print(e)
         return f"Gemini returns system Error, try your question again: {e}"
+
+# generate image by Imagen
+def exec_imagen(prompt, image_path):
+    # Generate image using Imagen (Google)
+    client = genai.Client(api_key=os.environ.get("GEMINI_TOKEN"))
+    result = client.models.generate_images(
+        model="models/imagen-3.0-generate-002",
+        prompt=prompt,
+        config=dict(
+            number_of_images=1,
+            output_mime_type="image/jpeg",
+            person_generation="ALLOW_ADULT",
+            aspect_ratio="1:1",
+        ),
+    )
+
+    if result.generated_images:
+      image_data = result.generated_images[0].image.image_bytes
+      img = Image.open(BytesIO(image_data))
+      img.save(image_path)
