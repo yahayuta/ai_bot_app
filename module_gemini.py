@@ -41,7 +41,7 @@ safety_settings = [
   },
 ]
 
-model = google_genai.GenerativeModel(model_name="gemini-1.0-pro",
+model = google_genai.GenerativeModel(model_name="gemini-2.5-flash-preview-05-20",
                               generation_config=generation_config,
                               safety_settings=safety_settings)
 
