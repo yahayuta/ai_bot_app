@@ -5,12 +5,13 @@ $ pip install google-generativeai
 """
 
 import os
-import model_chat_log
-import google.generativeai as google_genai # type: ignore
-
-from google import genai
+import base64
 from io import BytesIO
-from PIL import Image # type: ignore
+from PIL import Image  # type: ignore
+import model_chat_log
+import google.generativeai as google_genai  # type: ignore
+from google import genai
+from google.genai import types # type: ignore
 
 google_genai.configure(api_key=os.environ.get('GEMINI_TOKEN', ''))
 
@@ -79,3 +80,37 @@ def exec_imagen(prompt, image_path):
       image_data = result.generated_images[0].image.image_bytes
       img = Image.open(BytesIO(image_data))
       img.save(image_path)
+
+# New: Chat with image and text input
+def gemini_chat_with_image(image_path, prompt_text):
+    try:
+        with open(image_path, "rb") as img_file:
+            image_bytes = img_file.read()
+        encoded_image = base64.b64encode(image_bytes)
+
+        contents = [
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_bytes(mime_type="image/jpeg", data=base64.b64decode(encoded_image)),
+                    types.Part.from_text(text=prompt_text)
+                ],
+            )
+        ]
+
+        generate_content_config = types.GenerateContentConfig(response_mime_type="text/plain")
+
+        genai_client = genai.Client(api_key=os.environ.get("GEMINI_TOKEN"))
+        # Generate content with image and text
+        response = ""
+        for chunk in genai_client.models.generate_content_stream(
+            model="gemini-2.5-flash-preview-05-20",
+            contents=contents,
+            config=generate_content_config,
+        ):
+            response += chunk.text or ""
+        return response
+
+    except Exception as e:
+        print(f"Error during image + text Gemini request: {e}")
+        return f"Error: {e}"

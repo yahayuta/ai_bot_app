@@ -63,15 +63,16 @@ def openai_gpt_facebook_autopost_image():
     input.append(new_message)
 
     # send message to openai api
-    ai_response = module_openai.openai_chat_completion(chat=input)
-    print(ai_response)
+    prompt = module_openai.openai_chat_completion(chat=input)
+    print(prompt)
 
     # generate image by openai
     image_path = f"/tmp/image_{FACEBOOK_PAGE_ID}.png"
-    response = module_openai.openai_create_image(ai_response, image_path)
+    module_openai.openai_create_image(prompt, image_path)
     
-    # openai vision api making image details
-    ai_response = module_openai.openai_vision(ai_response, response.data[0].url)
+    # gemini chat with image and text input
+    prompt_with_image = f"What are in this image? Describe it good for sns post. The image title tells that {prompt}. Your answer must be Japanese."
+    ai_response = module_gemini.gemini_chat_with_image(image_path, prompt_with_image)
 
     # Initialize a Facebook Graph API object
     graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
@@ -100,14 +101,9 @@ def stability_facebook_autopost_image():
     image_path = f"/tmp/image_{current_time_string}.png"
     module_stability.generate(prompt, image_path)
 
-    # Uploads a file to the Google Cloud Storage bucket
-    image_url = module_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
-
-    print(image_path)
-    print(image_url)
-
-    # openai vision api making image details
-    ai_response = module_openai.openai_vision(prompt, image_url)
+    # gemini chat with image and text input
+    prompt_with_image = f"What are in this image? Describe it good for sns post. The image title tells that {prompt}. Your answer must be Japanese."
+    ai_response = module_gemini.gemini_chat_with_image(image_path, prompt_with_image)
 
     print(ai_response)
 
@@ -138,14 +134,9 @@ def gemini_facebook_autopost_image():
     image_path = f"/tmp/image_{current_time_string}.png"
     module_gemini.exec_imagen(prompt, image_path)
 
-    # Uploads a file to the Google Cloud Storage bucket
-    image_url = module_gcp_storage.upload_to_bucket(current_time_string, image_path, "ai-bot-app")
-
-    print(image_path)
-    print(image_url)
-
-    # openai vision api making image details
-    ai_response = module_openai.openai_vision(prompt, image_url)
+    # gemini chat with image and text input
+    prompt_with_image = f"What are in this image? Describe it good for sns post. The image title tells that {prompt}. Your answer must be Japanese."
+    ai_response = module_gemini.gemini_chat_with_image(image_path, prompt_with_image)
 
     print(ai_response)
 
