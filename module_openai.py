@@ -1,8 +1,8 @@
 import os
-import requests
+import requests # type: ignore
 import model_chat_log
 
-from openai import OpenAI
+from openai import OpenAI # type: ignore
 
 client = OpenAI(api_key=os.environ.get('OPENAI_TOKEN', ''))
 
@@ -83,7 +83,7 @@ def openai_vision(prompt, image_url):
             "content": [
                 {
                     "type": "text",
-                    "text": f"What are in this image? Describe it good for sns post. The image title tells that {prompt}. Your answer must be Japanese.",
+                    "text": f"What are in this image? Describe it good for sns post. Return only text of description. The image title tells that {prompt}. Your answer must be Japanese.",
                 },
                 {
                     "type": "image_url",

@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask # type: ignore
 from handle_line import line_app
 from handle_facebook import facebook_app
 

@@ -1,9 +1,9 @@
 import os
 import io
 
-from stability_sdk import client
-import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
-from PIL import Image
+from stability_sdk import client # type: ignore
+import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation # type: ignore
+from PIL import Image # type: ignore
 
 STABILITY_KEY = os.environ.get('STABILITY_KEY', '')
 

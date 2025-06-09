@@ -1,5 +1,5 @@
 import os
-import requests
+import requests # type: ignore
 import json
 import model_chat_log
 import module_openai
@@ -7,9 +7,9 @@ import time
 import module_gcp_storage
 import module_stability
 
-from flask import request
-from linebot import LineBotApi
-from flask import Blueprint
+from flask import request # type: ignore
+from linebot import LineBotApi # type: ignore
+from flask import Blueprint # type: ignore
 
 LINE_API_TOKEN =  os.environ.get('LINE_API_TOKEN', '')
 

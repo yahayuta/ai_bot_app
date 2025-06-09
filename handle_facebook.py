@@ -6,7 +6,6 @@ import random
 import time
 import model_chat_log
 import module_openai
-import module_gcp_storage
 import module_stability
 import module_common
 import module_gemini
@@ -71,8 +70,7 @@ def openai_gpt_facebook_autopost_image():
     module_openai.openai_create_image(prompt, image_path)
     
     # gemini chat with image and text input
-    prompt_with_image = f"What are in this image? Describe it good for sns post. The image title tells that {prompt}. Your answer must be Japanese."
-    ai_response = module_gemini.gemini_chat_with_image(image_path, prompt_with_image)
+    ai_response = module_gemini.gemini_chat_with_image(image_path, get_chat_with_image_template(prompt))
 
     # Initialize a Facebook Graph API object
     graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN)
@@ -102,8 +100,7 @@ def stability_facebook_autopost_image():
     module_stability.generate(prompt, image_path)
 
     # gemini chat with image and text input
-    prompt_with_image = f"What are in this image? Describe it good for sns post. The image title tells that {prompt}. Your answer must be Japanese."
-    ai_response = module_gemini.gemini_chat_with_image(image_path, prompt_with_image)
+    ai_response = module_gemini.gemini_chat_with_image(image_path, get_chat_with_image_template(prompt))
 
     print(ai_response)
 
@@ -135,8 +132,7 @@ def gemini_facebook_autopost_image():
     module_gemini.exec_imagen(prompt, image_path)
 
     # gemini chat with image and text input
-    prompt_with_image = f"What are in this image? Describe it good for sns post. The image title tells that {prompt}. Your answer must be Japanese."
-    ai_response = module_gemini.gemini_chat_with_image(image_path, prompt_with_image)
+    ai_response = module_gemini.gemini_chat_with_image(image_path, get_chat_with_image_template(prompt))
 
     print(ai_response)
 
@@ -212,3 +208,7 @@ def send_message(recipient_id, message_text):
     if r.status_code != 200:
         print(r.status_code)
         print(r.text)
+
+# This function returns a template for the chat with image prompt
+def get_chat_with_image_template(prompt):
+    return f"What are in this image? Describe it good for sns post. Return only text of description. The image title tells that {prompt}. Your answer must be Japanese."
