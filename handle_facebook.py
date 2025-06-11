@@ -96,7 +96,7 @@ def stability_facebook_autopost_image():
     # generate image by stability
     current_time = int(time.time())
     current_time_string = str(current_time)
-    image_path = f"/tmp/image_{current_time_string}.png"
+    image_path = f"/tmp/image_stability_{current_time_string}.png"
     module_stability.generate(prompt, image_path)
 
     # gemini chat with image and text input
@@ -128,7 +128,7 @@ def gemini_facebook_autopost_image():
     # generate image by stability
     current_time = int(time.time())
     current_time_string = str(current_time)
-    image_path = f"/tmp/image_{current_time_string}.png"
+    image_path = f"/tmp/image_gemini_{current_time_string}.png"
     module_gemini.exec_imagen(prompt, image_path)
 
     # gemini chat with image and text input

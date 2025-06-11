@@ -81,7 +81,7 @@ def exec_imagen(prompt, image_path):
       img = Image.open(BytesIO(image_data))
       img.save(image_path)
 
-# New: Chat with image and text input
+# chat with image and text input
 def gemini_chat_with_image(image_path, prompt_text):
     try:
         with open(image_path, "rb") as img_file:
