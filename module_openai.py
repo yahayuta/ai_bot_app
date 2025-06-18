@@ -1,15 +1,24 @@
 import os
-import requests # type: ignore
-import model_chat_log
+import requests  # type: ignore # HTTP requests for downloading images
+from openai import OpenAI  # type: ignore # OpenAI SDK client
 
-from openai import OpenAI # type: ignore
+import model_chat_log  # Local module for chat log management
 
+# Initialize OpenAI client with API key from environment variable
 client = OpenAI(api_key=os.environ.get('OPENAI_TOKEN', ''))
 
+# Default AI engine/model to use for chat completions
 AI_ENGINE = 'gpt-4o-mini'
 
 # send audio data
 def openai_whisper(file_path):
+    """
+    Transcribe audio file to text using OpenAI Whisper API.
+    Args:
+        file_path (str): Path to the audio file to transcribe.
+    Returns:
+        str: Transcribed text or error message.
+    """
     ai_response = ''
     try:
         # load audio file to openai
@@ -29,6 +38,14 @@ def openai_whisper(file_path):
 
 # send chat message data
 def openai_chat(text, user_id):
+    """
+    Send a chat message to OpenAI and get a response, maintaining chat history per user.
+    Args:
+        text (str): User's message.
+        user_id (str): Unique identifier for the user (for chat history).
+    Returns:
+        str: AI's response message.
+    """
     # building openai api parameters
     input = model_chat_log.get_logs(user_id=user_id)
     new_message = {"role":"user", "content":text}
@@ -45,6 +62,14 @@ def openai_chat(text, user_id):
 
 # generate image by openai
 def openai_create_image(prompt, image_path):
+    """
+    Generate an image using OpenAI's DALL-E API and save it to a file.
+    Args:
+        prompt (str): Text prompt for image generation.
+        image_path (str): Path to save the generated image.
+    Returns:
+        response_openai: The OpenAI API response object.
+    """
     try:
         response_openai = client.images.generate(
             model="dall-e-3",
@@ -58,13 +83,19 @@ def openai_create_image(prompt, image_path):
         response = requests.get(url)
         with open(image_path, 'wb') as file:
             file.write(response.content)
-
         return response_openai
     except Exception as e:
         print(f"An error occurred while creating the image: {e}")
 
 # send message to openai api
 def openai_chat_completion(chat):
+    """
+    Send a chat completion request to OpenAI and return the response.
+    Args:
+        chat (list): List of message dicts for the conversation.
+    Returns:
+        str: AI's response message or error message.
+    """
     ai_response = ''
     try:
         result = client.chat.completions.create(model=AI_ENGINE, messages=chat)
@@ -75,6 +106,14 @@ def openai_chat_completion(chat):
 
 # vision api making image details
 def openai_vision(prompt, image_url):
+    """
+    Use OpenAI Vision API to describe the contents of an image in Japanese, suitable for SNS posts.
+    Args:
+        prompt (str): Title or context for the image.
+        image_url (str): URL of the image to analyze.
+    Returns:
+        str: Description of the image in Japanese.
+    """
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -96,4 +135,4 @@ def openai_vision(prompt, image_url):
         ],
         max_tokens=1000,
     )
-    return response.choices[0].message.content;
+    return response.choices[0].message.content

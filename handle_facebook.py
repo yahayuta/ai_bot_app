@@ -1,27 +1,30 @@
 import os
-import requests # type: ignore
 import json
-import facebook # type: ignore
 import random
 import time
-import model_chat_log
-import module_openai
-import module_stability
-import module_common
-import module_gemini
 
-from flask import request # type: ignore
-from flask import Blueprint # type: ignore
+import requests  # type: ignore # HTTP requests for Facebook and external APIs
+import facebook  # type: ignore # Facebook Graph API SDK
+from flask import request, Blueprint  # type: ignore # Flask request object and Blueprint for modular routing
+
+import model_chat_log  # Chat log management
+import module_openai  # OpenAI API integration
+import module_stability  # Stability AI image generation
+import module_common  # Common topics and places
+import module_gemini  # Gemini and Imagen API integration
 
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
 FACEBOOK_PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID', '')
 
+# Create a Flask Blueprint for Facebook webhook handling
 facebook_app = Blueprint('handle_facebook', __name__)
 
 @facebook_app.route("/openai_gpt_facebook_autopost_news")
 def openai_gpt_facebook_autopost_news():
-
+    """
+    Fetches news from Google News RSS, summarizes it using OpenAI, and posts the summary to Facebook.
+    """
     url = "https://news.google.com/rss"
     response = requests.get(url)
     # Get the response content as a string
@@ -50,7 +53,9 @@ def openai_gpt_facebook_autopost_news():
 
 @facebook_app.route("/openai_gpt_facebook_autopost_image")
 def openai_gpt_facebook_autopost_image():
-
+    """
+    Picks a random topic and place, generates a prompt, creates an image with OpenAI, gets a description with Gemini, and posts both to Facebook.
+    """
     # pick topic randomly
     picked_topic = random.choice(module_common.topic)
     picked_place = random.choice(module_common.place)
@@ -84,10 +89,12 @@ def openai_gpt_facebook_autopost_image():
 
 @facebook_app.route("/stability_facebook_autopost_image")
 def stability_facebook_autopost_image():
-
+    """
+    Picks a random cartoon and pattern, generates an image with Stability, gets a description with Gemini, and posts both to Facebook.
+    """
     # pick topic randomly
     cartoon = random.choice(module_common.cartoons)
-    pattern = random.choice(module_common.patterns)
+    pattern = random.choice(module_common.pattern)
 
     prompt = f"{cartoon}, {pattern}"
 
@@ -116,10 +123,12 @@ def stability_facebook_autopost_image():
 
 @facebook_app.route("/gemini_facebook_autopost_image")
 def gemini_facebook_autopost_image():
-
+    """
+    Picks a random cartoon and pattern, generates an image with Gemini Imagen, gets a description with Gemini, and posts both to Facebook.
+    """
     # pick topic randomly
     cartoon = random.choice(module_common.cartoons)
-    pattern = random.choice(module_common.patterns)
+    pattern = random.choice(module_common.pattern)
 
     prompt = f"{cartoon}, {pattern}"
 
@@ -148,7 +157,9 @@ def gemini_facebook_autopost_image():
 
 @facebook_app.route('/openai_gpt_facebook', methods=['GET'])
 def openai_gpt_facebook_verify():
-    # Facebook requires a challenge token to verify the webhook
+    """
+    Facebook webhook verification endpoint. Returns the challenge if the verify token matches.
+    """
     challenge = request.args.get('hub.challenge')
     if FACEBOOK_PAGE_VERIFY_TOKEN == request.args.get('hub.verify_token'):
         return challenge
@@ -157,6 +168,9 @@ def openai_gpt_facebook_verify():
 
 @facebook_app.route('/openai_gpt_facebook', methods=['POST'])
 def openai_gpt_facebook_webhook():
+    """
+    Facebook webhook endpoint for receiving messages. Handles incoming messages and triggers response logic.
+    """
     # print(request.headers)
     data = request.get_json()
     print(data)
@@ -173,6 +187,9 @@ def openai_gpt_facebook_webhook():
 
 # handle facebook message by webhook
 def handle_message_facebook(message_text, sender_id):
+    """
+    Handles incoming Facebook messages, processes reset or chat requests, and sends a reply.
+    """
     print(message_text)
     reply_text = ""
     # send message to openai
@@ -190,6 +207,9 @@ def handle_message_facebook(message_text, sender_id):
 
 # send message by facebook api
 def send_message(recipient_id, message_text):
+    """
+    Sends a text message to a Facebook user using the Graph API.
+    """
     params = {
         "access_token": FACEBOOK_PAGE_ACCESS_TOKEN
     }
@@ -211,4 +231,7 @@ def send_message(recipient_id, message_text):
 
 # This function returns a template for the chat with image prompt
 def get_chat_with_image_template(prompt):
+    """
+    Returns a Japanese prompt template for describing an image for SNS posts.
+    """
     return f"What are in this image? Describe it good for sns post. Return only text of description. The image title tells that {prompt}. Your answer must be Japanese."

@@ -1,21 +1,23 @@
 """
-At the command line, only need to run once to install the package via pip:
-
-$ pip install google-generativeai
+This module provides functions to interact with Google's Gemini and Imagen AI APIs for chat and image generation.
+- Requires: google-generativeai, Pillow, and related dependencies.
 """
 
 import os
 import base64
 from io import BytesIO
-from PIL import Image  # type: ignore
-import model_chat_log
-import google.generativeai as google_genai  # type: ignore
-from google import genai
-from google.genai import types # type: ignore
 
+from PIL import Image  # type: ignore # Image processing
+import model_chat_log  # Local module for chat log management
+import google.generativeai as google_genai  # type: ignore # Google Gemini API
+from google import genai  # Google GenAI client
+from google.genai import types  # type: ignore # Google GenAI types
+
+# Configure Gemini API key from environment variable
 google_genai.configure(api_key=os.environ.get('GEMINI_TOKEN', ''))
 
-# Set up the model
+# Set up the model configuration for Gemini
+# Controls randomness, output length, and safety settings
 generation_config = {
   "temperature": 0.9,
   "top_p": 1,
@@ -48,6 +50,14 @@ model = google_genai.GenerativeModel(model_name="gemini-2.5-flash-preview-05-20"
 
 # send chat message data
 def gemini_chat(text, user_id):
+    """
+    Send a chat message to Gemini, maintaining chat history per user.
+    Args:
+        text (str): User's message.
+        user_id (str): Unique identifier for the user (for chat history).
+    Returns:
+        str: AI's response message or error message.
+    """
     try:
       # get chat history from database
       history = model_chat_log.get_logs_gemini(user_id=user_id)
@@ -63,6 +73,14 @@ def gemini_chat(text, user_id):
 
 # generate image by Imagen
 def exec_imagen(prompt, image_path):
+    """
+    Generate an image using Google's Imagen API and save it to a file.
+    Args:
+        prompt (str): Text prompt for image generation.
+        image_path (str): Path to save the generated image.
+    Returns:
+        None. Saves the image to the specified path.
+    """
     # Generate image using Imagen (Google)
     client = genai.Client(api_key=os.environ.get("GEMINI_TOKEN"))
     result = client.models.generate_images(
@@ -83,6 +101,14 @@ def exec_imagen(prompt, image_path):
 
 # chat with image and text input
 def gemini_chat_with_image(image_path, prompt_text):
+    """
+    Send an image and text prompt to Gemini for multimodal chat.
+    Args:
+        image_path (str): Path to the image file.
+        prompt_text (str): Text prompt to send with the image.
+    Returns:
+        str: AI's response message or error message.
+    """
     try:
         with open(image_path, "rb") as img_file:
             image_bytes = img_file.read()

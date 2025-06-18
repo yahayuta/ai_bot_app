@@ -1,24 +1,29 @@
 import os
-import requests # type: ignore
-import json
-import model_chat_log
-import module_openai
 import time
-import module_gcp_storage
-import module_stability
+import json
 
-from flask import request # type: ignore
-from linebot import LineBotApi # type: ignore
-from flask import Blueprint # type: ignore
+import requests  # type: ignore # HTTP requests for LINE API
+from flask import request, Blueprint  # type: ignore # Flask request object and Blueprint for modular routing
+from linebot import LineBotApi  # type: ignore # LINE SDK
+
+import model_chat_log  # Chat log management
+import module_openai  # OpenAI API integration
+import module_gcp_storage  # Google Cloud Storage integration
+import module_stability  # Stability AI image generation
 
 LINE_API_TOKEN =  os.environ.get('LINE_API_TOKEN', '')
 
 AI_ENGINE = 'gpt-3.5-turbo'
 
+# Create a Flask Blueprint for LINE webhook handling
 line_app = Blueprint('handle_line', __name__)
 
 @line_app.route("/openai_gpt_line", methods=["POST"])
 def openai_gpt_line():
+    """
+    Webhook endpoint for LINE messaging API. Handles incoming messages, processes text/audio,
+    generates responses or images using AI APIs, manages chat logs, and replies to users.
+    """
     # register webhook endpoint this route url to line developer console
 
     # extract line message event parameters
