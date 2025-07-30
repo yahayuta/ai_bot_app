@@ -55,11 +55,11 @@ Welcome to the AI Bot App documentation. This folder contains additional detaile
 ```
 ai_bot_app/
 ├── README.md                          # Main project documentation (root)
+├── LICENSE                            # Project license
 ├── docs/
 │   ├── INDEX.md                       # This file - navigation guide
 │   ├── IMAGE_GENERATION_ENHANCEMENT.md # Image generation system guide
-│   ├── OPTIMIZATION_SUMMARY.md        # Code optimization details
-│   └── LICENSE                        # Project license
+│   └── OPTIMIZATION_SUMMARY.md        # Code optimization details
 └── [source files...]
 ```
 

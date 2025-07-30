@@ -32,11 +32,11 @@ ai_bot_app/
 ├── requirements.txt            # Python dependencies
 ├── Dockerfile                  # Docker configuration
 ├── docker-compose.yml          # Docker Compose setup
+├── LICENSE                     # Project license
 └── docs/                       # Additional documentation
     ├── INDEX.md                # Documentation navigation
     ├── IMAGE_GENERATION_ENHANCEMENT.md  # Image generation guide
-    ├── OPTIMIZATION_SUMMARY.md          # Code optimization details
-    └── LICENSE                 # Project license
+    └── OPTIMIZATION_SUMMARY.md          # Code optimization details
 ```
 
 ## ⚡ Quick Start
@@ -383,7 +383,7 @@ python main.py
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](docs/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
