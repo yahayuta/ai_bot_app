@@ -1,2 +1,93 @@
 
-*.pyc
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env
+.venv/
+.python-version
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Application specific
+/tmp/
+*.log
+.env
+.env.*
+!.env.example
+
+# Google Cloud
+*.json
+!example-credentials.json
+
+# Docker
+.docker/
+*.env
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.temp
+
+# Project specific
+/logs/
+/data/
+/uploads/
+/downloads/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp3
+*.mp4
+*.wav
+*.m4a
+
+# Keep these files
+!.gitignore
+!.gitattributes
+!requirements*.txt
+!setup.py
+!README.md
+!LICENSE
+!CHANGELOG.md
+!example.*
