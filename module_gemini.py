@@ -84,7 +84,7 @@ def exec_imagen(prompt, image_path):
     # Generate image using Imagen (Google)
     client = genai.Client(api_key=os.environ.get("GEMINI_TOKEN"))
     result = client.models.generate_images(
-        model="models/imagen-3.0-generate-002",
+        model="models/imagen-4.0-generate-001",
         prompt=prompt,
         config=dict(
             number_of_images=1,
@@ -130,7 +130,7 @@ def gemini_chat_with_image(image_path, prompt_text):
         # Generate content with image and text
         response = ""
         for chunk in genai_client.models.generate_content_stream(
-            model="gemini-2.5-flash-preview-05-20",
+            model="gemini-2.5-flash",
             contents=contents,
             config=generate_content_config,
         ):
