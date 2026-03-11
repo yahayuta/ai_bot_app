@@ -38,16 +38,15 @@ def openai_gpt_facebook_autopost_news():
     ai_response = module_openai.openai_chat_completion(chat=input)
     print(ai_response)
 
-    # Initialize a Facebook Graph API object
-    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='3.1')
-
-    news_sum = f"最新ニューストピック：\n{ai_response}"
-    # Make a post to the Facebook page
-    graph.put_object(
-        parent_object=FACEBOOK_PAGE_ID,
-        connection_name='feed',
-        message=news_sum
-    )
+    # Post to Facebook Page feed using direct REST API
+    fb_url = f"https://graph.facebook.com/v12.0/{FACEBOOK_PAGE_ID}/feed"
+    payload = {
+        'message': f"最新ニューストピック：\n{ai_response}",
+        'access_token': FACEBOOK_PAGE_ACCESS_TOKEN
+    }
+    r = requests.post(fb_url, data=payload)
+    if r.status_code != 200:
+        print(f"Error posting news: {r.text}")
 
     return "ok", 200
 
@@ -77,13 +76,20 @@ def openai_gpt_facebook_autopost_image():
     # gemini chat with image and text input
     ai_response = module_gemini.gemini_chat_with_image(image_path, get_chat_with_image_template(prompt))
 
-    # Initialize a Facebook Graph API object
-    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='3.1')
-
+    # Post photo to Facebook Page using direct REST API
+    fb_url = f"https://graph.facebook.com/v12.0/{FACEBOOK_PAGE_ID}/photos"
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
-        # Upload the image to Facebook and get its ID
-        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=ai_response)
+        payload = {
+            'caption': ai_response,
+            'access_token': FACEBOOK_PAGE_ACCESS_TOKEN
+        }
+        files = {
+            'source': image
+        }
+        r = requests.post(fb_url, data=payload, files=files)
+        if r.status_code != 200:
+            print(f"Error posting photo: {r.text}")
 
     return "ok", 200
 
@@ -111,13 +117,20 @@ def stability_facebook_autopost_image():
 
     print(ai_response)
 
-    # Initialize a Facebook Graph API object
-    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='3.1')
-
+    # Post photo to Facebook Page using direct REST API
+    fb_url = f"https://graph.facebook.com/v12.0/{FACEBOOK_PAGE_ID}/photos"
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
-        # Upload the image to Facebook and get its ID
-        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=ai_response)
+        payload = {
+            'caption': ai_response,
+            'access_token': FACEBOOK_PAGE_ACCESS_TOKEN
+        }
+        files = {
+            'source': image
+        }
+        r = requests.post(fb_url, data=payload, files=files)
+        if r.status_code != 200:
+            print(f"Error posting photo: {r.text}")
 
     return "ok", 200
 
@@ -145,13 +158,20 @@ def gemini_facebook_autopost_image():
 
     print(ai_response)
 
-    # Initialize a Facebook Graph API object
-    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='3.1')
-
+    # Post photo to Facebook Page using direct REST API
+    fb_url = f"https://graph.facebook.com/v12.0/{FACEBOOK_PAGE_ID}/photos"
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
-        # Upload the image to Facebook and get its ID
-        graph.put_photo(image, album_id=FACEBOOK_PAGE_ID, caption=ai_response)
+        payload = {
+            'caption': ai_response,
+            'access_token': FACEBOOK_PAGE_ACCESS_TOKEN
+        }
+        files = {
+            'source': image
+        }
+        r = requests.post(fb_url, data=payload, files=files)
+        if r.status_code != 200:
+            print(f"Error posting photo: {r.text}")
 
     return "ok", 200
 
