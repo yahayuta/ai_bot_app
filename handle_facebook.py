@@ -39,7 +39,7 @@ def openai_gpt_facebook_autopost_news():
     print(ai_response)
 
     # Initialize a Facebook Graph API object
-    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='12.0')
+    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='3.1')
 
     news_sum = f"最新ニューストピック：\n{ai_response}"
     # Make a post to the Facebook page
@@ -78,7 +78,7 @@ def openai_gpt_facebook_autopost_image():
     ai_response = module_gemini.gemini_chat_with_image(image_path, get_chat_with_image_template(prompt))
 
     # Initialize a Facebook Graph API object
-    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='12.0')
+    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='3.1')
 
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
@@ -112,7 +112,7 @@ def stability_facebook_autopost_image():
     print(ai_response)
 
     # Initialize a Facebook Graph API object
-    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='12.0')
+    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='3.1')
 
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
@@ -146,7 +146,7 @@ def gemini_facebook_autopost_image():
     print(ai_response)
 
     # Initialize a Facebook Graph API object
-    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='12.0')
+    graph = facebook.GraphAPI(FACEBOOK_PAGE_ACCESS_TOKEN, version='3.1')
 
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
