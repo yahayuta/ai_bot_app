@@ -20,6 +20,29 @@ FACEBOOK_PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID', '')
 # Create a Flask Blueprint for Facebook webhook handling
 facebook_app = Blueprint('handle_facebook', __name__)
 
+@facebook_app.route("/facebook_debug_token")
+def facebook_debug_token():
+    """
+    Diagnostic endpoint to identify the current Facebook Access Token's identity and permissions.
+    """
+    # Check identity using /me
+    me_url = "https://graph.facebook.com/v19.0/me"
+    params = {'access_token': FACEBOOK_PAGE_ACCESS_TOKEN}
+    me_response = requests.get(me_url, params=params)
+    
+    # Check permissions using /me/permissions
+    perm_url = "https://graph.facebook.com/v19.0/me/permissions"
+    perm_response = requests.get(perm_url, params=params)
+    
+    debug_info = {
+        "identity": me_response.json() if me_response.status_code == 200 else f"Error: {me_response.text}",
+        "permissions": perm_response.json() if perm_response.status_code == 200 else f"Error: {perm_response.text}",
+        "token_prefix": FACEBOOK_PAGE_ACCESS_TOKEN[:10] + "..." if FACEBOOK_PAGE_ACCESS_TOKEN else "None",
+        "page_id_env": FACEBOOK_PAGE_ID
+    }
+    
+    return debug_info, 200
+
 @facebook_app.route("/openai_gpt_facebook_autopost_news")
 def openai_gpt_facebook_autopost_news():
     """
