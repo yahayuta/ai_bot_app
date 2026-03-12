@@ -4,7 +4,7 @@ import random
 import time
 
 import requests  # type: ignore # HTTP requests for Facebook and external APIs
-import facebook  # type: ignore # Facebook Graph API SDK
+# import facebook  # type: ignore # Facebook Graph API SDK (Replaced with direct REST API)
 from flask import request, Blueprint  # type: ignore # Flask request object and Blueprint for modular routing
 
 import model_chat_log  # Chat log management
@@ -38,15 +38,13 @@ def openai_gpt_facebook_autopost_news():
     ai_response = module_openai.openai_chat_completion(chat=input)
     print(ai_response)
 
-    # Post to Facebook Page feed using direct REST API
-    fb_url = f"https://graph.facebook.com/v12.0/{FACEBOOK_PAGE_ID}/feed"
-    payload = {
-        'message': f"最新ニューストピック：\n{ai_response}",
-        'access_token': FACEBOOK_PAGE_ACCESS_TOKEN
-    }
-    r = requests.post(fb_url, data=payload)
+    # Post to Facebook Page feed using direct REST API v19.0
+    fb_url = f"https://graph.facebook.com/v19.0/{FACEBOOK_PAGE_ID}/feed"
+    params = {'access_token': FACEBOOK_PAGE_ACCESS_TOKEN}
+    payload = {'message': f"最新ニューストピック：\n{ai_response}"}
+    r = requests.post(fb_url, params=params, data=payload)
     if r.status_code != 200:
-        print(f"Error posting news: {r.text}")
+        print(f"Error posting news ({r.status_code}): {r.text}")
 
     return "ok", 200
 
@@ -76,20 +74,16 @@ def openai_gpt_facebook_autopost_image():
     # gemini chat with image and text input
     ai_response = module_gemini.gemini_chat_with_image(image_path, get_chat_with_image_template(prompt))
 
-    # Post photo to Facebook Page using direct REST API
-    fb_url = f"https://graph.facebook.com/v12.0/{FACEBOOK_PAGE_ID}/photos"
+    # Post photo to Facebook Page using direct REST API v19.0
+    fb_url = f"https://graph.facebook.com/v19.0/{FACEBOOK_PAGE_ID}/photos"
+    params = {'access_token': FACEBOOK_PAGE_ACCESS_TOKEN}
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
-        payload = {
-            'caption': ai_response,
-            'access_token': FACEBOOK_PAGE_ACCESS_TOKEN
-        }
-        files = {
-            'source': image
-        }
-        r = requests.post(fb_url, data=payload, files=files)
+        payload = {'caption': ai_response}
+        files = {'source': image}
+        r = requests.post(fb_url, params=params, data=payload, files=files)
         if r.status_code != 200:
-            print(f"Error posting photo: {r.text}")
+            print(f"Error posting photo ({r.status_code}): {r.text}")
 
     return "ok", 200
 
@@ -117,20 +111,16 @@ def stability_facebook_autopost_image():
 
     print(ai_response)
 
-    # Post photo to Facebook Page using direct REST API
-    fb_url = f"https://graph.facebook.com/v12.0/{FACEBOOK_PAGE_ID}/photos"
+    # Post photo to Facebook Page using direct REST API v19.0
+    fb_url = f"https://graph.facebook.com/v19.0/{FACEBOOK_PAGE_ID}/photos"
+    params = {'access_token': FACEBOOK_PAGE_ACCESS_TOKEN}
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
-        payload = {
-            'caption': ai_response,
-            'access_token': FACEBOOK_PAGE_ACCESS_TOKEN
-        }
-        files = {
-            'source': image
-        }
-        r = requests.post(fb_url, data=payload, files=files)
+        payload = {'caption': ai_response}
+        files = {'source': image}
+        r = requests.post(fb_url, params=params, data=payload, files=files)
         if r.status_code != 200:
-            print(f"Error posting photo: {r.text}")
+            print(f"Error posting photo ({r.status_code}): {r.text}")
 
     return "ok", 200
 
@@ -158,20 +148,16 @@ def gemini_facebook_autopost_image():
 
     print(ai_response)
 
-    # Post photo to Facebook Page using direct REST API
-    fb_url = f"https://graph.facebook.com/v12.0/{FACEBOOK_PAGE_ID}/photos"
+    # Post photo to Facebook Page using direct REST API v19.0
+    fb_url = f"https://graph.facebook.com/v19.0/{FACEBOOK_PAGE_ID}/photos"
+    params = {'access_token': FACEBOOK_PAGE_ACCESS_TOKEN}
     # Open the image file to be uploaded
     with open(image_path, 'rb') as image:
-        payload = {
-            'caption': ai_response,
-            'access_token': FACEBOOK_PAGE_ACCESS_TOKEN
-        }
-        files = {
-            'source': image
-        }
-        r = requests.post(fb_url, data=payload, files=files)
+        payload = {'caption': ai_response}
+        files = {'source': image}
+        r = requests.post(fb_url, params=params, data=payload, files=files)
         if r.status_code != 200:
-            print(f"Error posting photo: {r.text}")
+            print(f"Error posting photo ({r.status_code}): {r.text}")
 
     return "ok", 200
 
@@ -244,7 +230,7 @@ def send_message(recipient_id, message_text):
             "text": message_text
         }
     })
-    r = requests.post("https://graph.facebook.com/v12.0/me/messages", params=params, headers=headers, data=data)
+    r = requests.post("https://graph.facebook.com/v19.0/me/messages", params=params, headers=headers, data=data)
     if r.status_code != 200:
         print(r.status_code)
         print(r.text)
