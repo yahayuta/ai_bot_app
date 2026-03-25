@@ -305,7 +305,7 @@ Output: "cat, high quality, detailed, professional, award winning"
 2. Create a new app and page
 3. Get your Page Access Token
 4. Set `FACEBOOK_ACCESS_TOKEN` environment variable
-5. Configure webhook URL: `https://your-domain.com/facebook_webhook`
+5. Configure webhook URL: `https://your-domain.com/openai_gpt_facebook`
 
 #### Google Cloud Platform (for Cloud Run deployment)
 
@@ -406,7 +406,7 @@ gcloud run deploy ai-bot-app \
 **Note**: After deployment, update your LINE and Facebook webhook URLs to point to your Cloud Run service URL:
 
 - LINE Webhook: `https://ai-bot-app-xxxxx-xx.a.run.app/openai_gpt_line`
-- Facebook Webhook: `https://ai-bot-app-xxxxx-xx.a.run.app/facebook_webhook`
+- Facebook Webhook: `https://ai-bot-app-xxxxx-xx.a.run.app/openai_gpt_facebook`
 
 ### Production Deployment Options
 
@@ -534,6 +534,6 @@ When reporting issues, please include:
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: December 2024  
+**Version**: 1.0.1  
+**Last Updated**: March 2026  
 **Maintainer**: AI Bot App Team
