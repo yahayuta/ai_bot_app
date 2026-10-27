@@ -99,13 +99,13 @@ pip install -r requirements.txt
 $env:OPENAI_TOKEN = "your_openai_key"
 $env:STABILITY_KEY = "your_stability_key"
 $env:LINE_API_TOKEN = "your_line_token"
-$env:FACEBOOK_ACCESS_TOKEN = "your_facebook_token"
+$env:FACEBOOK_PAGE_ACCESS_TOKEN = "your_facebook_token"
 
 # On Unix/MacOS:
 export OPENAI_TOKEN=your_openai_key
 export STABILITY_KEY=your_stability_key
 export LINE_API_TOKEN=your_line_token
-export FACEBOOK_ACCESS_TOKEN=your_facebook_token
+export FACEBOOK_PAGE_ACCESS_TOKEN=your_facebook_token
 ```
 
 ### 3. Run the Application
@@ -135,7 +135,7 @@ Create a `.env` file in the project root directory:
 OPENAI_TOKEN=your_openai_key
 STABILITY_KEY=your_stability_key
 LINE_API_TOKEN=your_line_token
-FACEBOOK_ACCESS_TOKEN=your_facebook_token
+FACEBOOK_PAGE_ACCESS_TOKEN=your_facebook_token
 
 # Optional Configuration
 PORT=8080
@@ -272,10 +272,31 @@ Output: "cat, high quality, detailed, professional, award winning"
 | `OPENAI_TOKEN` | OpenAI API key | Yes | - |
 | `STABILITY_KEY` | Stability AI API key | Yes | - |
 | `LINE_API_TOKEN` | LINE Bot API token | Yes | - |
-| `FACEBOOK_ACCESS_TOKEN` | Facebook Page access token | Yes | - |
+| `LINE_CHANNEL_SECRET` | LINE channel secret, used to verify `X-Line-Signature` | Yes (LINE) | - |
+| `FACEBOOK_PAGE_ACCESS_TOKEN` | Facebook Page access token | Yes | - |
+| `FACEBOOK_PAGE_VERIFY_TOKEN` | Token you choose for webhook URL verification | Yes (Facebook) | - |
+| `FACEBOOK_APP_SECRET` | Meta app secret, used to verify `X-Hub-Signature-256` | Yes (Facebook) | - |
+| `FACEBOOK_PAGE_ID` | Facebook Page ID for auto-posts | For auto-posts | - |
+| `JOB_TOKEN` | Shared token required in the `X-Job-Token` header of auto-post and diagnostic endpoints | For auto-posts | - |
 | `PORT` | Application port | No | 8080 |
 | `GOOGLE_CLOUD_PROJECT` | Google Cloud Project ID | For GCP | - |
 | `GOOGLE_APPLICATION_CREDENTIALS` | GCP Service Account Key | For GCP | - |
+
+### Security
+
+The service runs publicly on Cloud Run, so every endpoint checks who is calling. All checks fail closed: if the secret is not set, the request is rejected with 403.
+
+- **LINE webhook** (`/openai_gpt_line`): verifies `X-Line-Signature` (HMAC-SHA256 of the raw body with `LINE_CHANNEL_SECRET`).
+- **Facebook webhook** (`POST /openai_gpt_facebook`): verifies `X-Hub-Signature-256` with `FACEBOOK_APP_SECRET`. URL verification (`GET`) requires `hub.mode=subscribe` and the configured `FACEBOOK_PAGE_VERIFY_TOKEN`, and echoes the challenge as plain text.
+- **Auto-post and diagnostic endpoints** (`/*_autopost_*`, `/facebook_debug_token`): require the header `X-Job-Token: <JOB_TOKEN>`. In Cloud Scheduler, add it under the job's HTTP headers. The diagnostic endpoint no longer returns any part of the access token.
+- **Chat logs**: BigQuery queries use named parameters, so message text and user IDs are never spliced into SQL.
+
+Run the tests with:
+
+```bash
+pip install -r requirements.txt pytest
+pytest -q
+```
 
 ### API Setup
 
@@ -297,15 +318,17 @@ Output: "cat, high quality, detailed, professional, award winning"
 2. Create a new provider and channel
 3. Get your Channel Access Token
 4. Set `LINE_API_TOKEN` environment variable
-5. Configure webhook URL: `https://your-domain.com/openai_gpt_line`
+5. Copy the Channel secret (Basic settings) into `LINE_CHANNEL_SECRET`
+6. Configure webhook URL: `https://your-domain.com/openai_gpt_line`
 
 #### Facebook Messenger
 
 1. Visit [Facebook Developers](https://developers.facebook.com/)
 2. Create a new app and page
 3. Get your Page Access Token
-4. Set `FACEBOOK_ACCESS_TOKEN` environment variable
-5. Configure webhook URL: `https://your-domain.com/openai_gpt_facebook`
+4. Set `FACEBOOK_PAGE_ACCESS_TOKEN` environment variable
+5. Copy the App secret (App settings > Basic) into `FACEBOOK_APP_SECRET`
+6. Configure webhook URL: `https://your-domain.com/openai_gpt_facebook` with the same value as `FACEBOOK_PAGE_VERIFY_TOKEN`
 
 #### Google Cloud Platform (for Cloud Run deployment)
 
