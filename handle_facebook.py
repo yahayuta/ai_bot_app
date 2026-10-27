@@ -215,12 +215,13 @@ def openai_gpt_facebook_webhook():
     Facebook webhook endpoint for receiving messages. Handles incoming messages and triggers response logic.
     """
     # Reject anything that Meta did not sign with our app secret
+    # (skipped with a warning while FACEBOOK_APP_SECRET is not configured)
     body = request.get_data()
-    if not module_security.verify_facebook_signature(
+    if not FACEBOOK_APP_SECRET:
+        print("WARNING: FACEBOOK_APP_SECRET is not set; webhook signature is not verified")
+    elif not module_security.verify_facebook_signature(
         body, request.headers.get("X-Hub-Signature-256"), FACEBOOK_APP_SECRET
     ):
-        if not FACEBOOK_APP_SECRET:
-            print("FACEBOOK_APP_SECRET is not set; rejecting webhook")
         return "Invalid signature", 403
 
     data = json.loads(body)

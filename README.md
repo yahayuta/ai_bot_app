@@ -284,7 +284,7 @@ Output: "cat, high quality, detailed, professional, award winning"
 
 ### Security
 
-The service runs publicly on Cloud Run, so every endpoint checks who is calling. All checks fail closed: if the secret is not set, the request is rejected with 403.
+The service runs publicly on Cloud Run, so endpoints can check who is calling. Each check turns on when its secret is set; while it is not set, the request is allowed and a `WARNING` is logged.
 
 - **LINE webhook** (`/openai_gpt_line`): verifies `X-Line-Signature` (HMAC-SHA256 of the raw body with `LINE_CHANNEL_SECRET`).
 - **Facebook webhook** (`POST /openai_gpt_facebook`): verifies `X-Hub-Signature-256` with `FACEBOOK_APP_SECRET`. URL verification (`GET`) requires `hub.mode=subscribe` and the configured `FACEBOOK_PAGE_VERIFY_TOKEN`, and echoes the challenge as plain text.

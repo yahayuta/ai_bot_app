@@ -1,7 +1,8 @@
 """Request authentication helpers for the webhook and scheduled-job endpoints.
 
-Every check fails closed: if the secret it needs is not configured, the
-request is rejected rather than accepted.
+Each check is opt-in: while its secret is not configured, the check is
+skipped and a warning is logged, so the app keeps working. Once the secret is
+set, requests that fail the check are rejected.
 """
 import base64
 import functools
@@ -59,9 +60,9 @@ def require_job_token(view):
 
     @functools.wraps(view)
     def wrapper(*args, **kwargs):
-        if not verify_job_token(request.headers.get("X-Job-Token")):
-            if not _env("JOB_TOKEN"):
-                print("JOB_TOKEN is not set; rejecting scheduled-job request")
+        if not _env("JOB_TOKEN"):
+            print("WARNING: JOB_TOKEN is not set; scheduled-job endpoint is not protected")
+        elif not verify_job_token(request.headers.get("X-Job-Token")):
             return "Forbidden", 403
         return view(*args, **kwargs)
 

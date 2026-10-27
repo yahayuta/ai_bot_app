@@ -93,12 +93,13 @@ def openai_gpt_line():
     generates responses or images using AI APIs, manages chat logs, and replies to users.
     """
     # Reject anything that LINE did not sign with our channel secret
+    # (skipped with a warning while LINE_CHANNEL_SECRET is not configured)
     body = request.get_data()
-    if not module_security.verify_line_signature(
+    if not LINE_CHANNEL_SECRET:
+        print("WARNING: LINE_CHANNEL_SECRET is not set; webhook signature is not verified")
+    elif not module_security.verify_line_signature(
         body, request.headers.get("X-Line-Signature"), LINE_CHANNEL_SECRET
     ):
-        if not LINE_CHANNEL_SECRET:
-            print("LINE_CHANNEL_SECRET is not set; rejecting webhook")
         return "Invalid signature", 403
 
     # Extract line message event parameters
