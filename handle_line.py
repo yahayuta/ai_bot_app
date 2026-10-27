@@ -13,8 +13,11 @@ import module_stability  # Stability AI image generation
 import module_enhanced_image  # Enhanced image generation
 import prompt_templates  # Prompt templates and help
 import prompt_config  # Prompt validation
+import module_security  # Webhook signature checks
 
 LINE_API_TOKEN = os.environ.get('LINE_API_TOKEN', '')
+# Channel secret from LINE Developers; used to verify X-Line-Signature
+LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET', '')
 
 # Create a Flask Blueprint for LINE webhook handling
 line_app = Blueprint('handle_line', __name__)
@@ -86,10 +89,22 @@ def openai_gpt_line():
     Webhook endpoint for LINE messaging API. Handles incoming messages, processes text/audio,
     generates responses or images using AI APIs, manages chat logs, and replies to users.
     """
+    # Reject anything that LINE did not sign with our channel secret
+    body = request.get_data()
+    if not module_security.verify_line_signature(
+        body, request.headers.get("X-Line-Signature"), LINE_CHANNEL_SECRET
+    ):
+        if not LINE_CHANNEL_SECRET:
+            print("LINE_CHANNEL_SECRET is not set; rejecting webhook")
+        return "Invalid signature", 403
+
     # Extract line message event parameters
-    request_json = request.json
+    request_json = json.loads(body)
     print(request_json)
-    events = request_json["events"]
+    events = request_json.get("events", [])
+    if not events:
+        # LINE sends an empty event list when the webhook URL is verified
+        return "ok"
     event = events[0]
     replyToken = event["replyToken"]
     type = event["message"]["type"]

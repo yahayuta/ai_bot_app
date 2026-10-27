@@ -1,5 +1,13 @@
 from google.cloud import bigquery
 
+
+def _params(**values):
+    """Build a job config with named STRING parameters, so user input is never spliced into SQL."""
+    return bigquery.QueryJobConfig(
+        query_parameters=[bigquery.ScalarQueryParameter(k, "STRING", v) for k, v in values.items()]
+    )
+
+
 # save chat log into bigquery
 def save_log(user_id, role, message):
     """
@@ -14,7 +22,11 @@ def save_log(user_id, role, message):
         None
     """
     client = bigquery.Client()
-    client.query(f'INSERT INTO app.chat_log(user_id,message,role,created) values(\'{user_id}\',\'\'\'{message}\'\'\',\'{role}\',CURRENT_DATETIME(\'Asia/Tokyo\'))')
+    client.query(
+        "INSERT INTO app.chat_log(user_id, message, role, created) "
+        "VALUES (@user_id, @message, @role, CURRENT_DATETIME('Asia/Tokyo'))",
+        job_config=_params(user_id=user_id, message=message, role=role),
+    )
 
 # load chat log from bigquery
 def get_logs(user_id):
@@ -28,7 +40,10 @@ def get_logs(user_id):
         list: List of message dicts with 'role' and 'content' keys.
     """
     client = bigquery.Client()
-    query_job = client.query(f'SELECT * FROM app.chat_log where user_id = \'{user_id}\' order by created;')
+    query_job = client.query(
+        "SELECT * FROM app.chat_log WHERE user_id = @user_id ORDER BY created",
+        job_config=_params(user_id=user_id),
+    )
     rows = query_job.result()
     print(rows.total_rows)
     logs = []
@@ -49,7 +64,10 @@ def get_logs_gemini(user_id):
         list: List of message dicts with 'role' and 'parts' keys.
     """
     client = bigquery.Client()
-    query_job = client.query(f'SELECT * FROM app.chat_log where user_id = \'{user_id}\' order by created;')
+    query_job = client.query(
+        "SELECT * FROM app.chat_log WHERE user_id = @user_id ORDER BY created",
+        job_config=_params(user_id=user_id),
+    )
     rows = query_job.result()
     print(rows.total_rows)
     logs = []
@@ -70,4 +88,7 @@ def delete_logs(user_id):
         None
     """
     client = bigquery.Client()
-    client.query(f'DELETE FROM app.chat_log where user_id = \'{user_id}\';')
+    client.query(
+        "DELETE FROM app.chat_log WHERE user_id = @user_id",
+        job_config=_params(user_id=user_id),
+    )

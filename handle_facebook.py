@@ -12,15 +12,20 @@ import module_openai  # OpenAI API integration
 import module_stability  # Stability AI image generation
 import module_common  # Common topics and places
 import module_gemini  # Gemini and Imagen API integration
+import module_security  # Webhook signature and job token checks
+from module_security import require_job_token
 
 FACEBOOK_PAGE_ACCESS_TOKEN =  os.environ.get('FACEBOOK_PAGE_ACCESS_TOKEN', '')
 FACEBOOK_PAGE_VERIFY_TOKEN =  os.environ.get('FACEBOOK_PAGE_VERIFY_TOKEN', '')
 FACEBOOK_PAGE_ID = os.environ.get('FACEBOOK_PAGE_ID', '')
+# App secret from Meta for Developers; used to verify X-Hub-Signature-256
+FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET', '')
 
 # Create a Flask Blueprint for Facebook webhook handling
 facebook_app = Blueprint('handle_facebook', __name__)
 
 @facebook_app.route("/facebook_debug_token")
+@require_job_token
 def facebook_debug_token():
     """
     Diagnostic endpoint to identify the current Facebook Access Token's identity and permissions.
@@ -37,13 +42,14 @@ def facebook_debug_token():
     debug_info = {
         "identity": me_response.json() if me_response.status_code == 200 else f"Error: {me_response.text}",
         "permissions": perm_response.json() if perm_response.status_code == 200 else f"Error: {perm_response.text}",
-        "token_prefix": FACEBOOK_PAGE_ACCESS_TOKEN[:10] + "..." if FACEBOOK_PAGE_ACCESS_TOKEN else "None",
+        "token_configured": bool(FACEBOOK_PAGE_ACCESS_TOKEN),
         "page_id_env": FACEBOOK_PAGE_ID
     }
     
     return debug_info, 200
 
 @facebook_app.route("/openai_gpt_facebook_autopost_news")
+@require_job_token
 def openai_gpt_facebook_autopost_news():
     """
     Fetches news from Google News RSS, summarizes it using OpenAI, and posts the summary to Facebook.
@@ -72,6 +78,7 @@ def openai_gpt_facebook_autopost_news():
     return "ok", 200
 
 @facebook_app.route("/openai_gpt_facebook_autopost_image")
+@require_job_token
 def openai_gpt_facebook_autopost_image():
     """
     Picks a random topic and place, generates a prompt, creates an image with OpenAI, gets a description with Gemini, and posts both to Facebook.
@@ -111,6 +118,7 @@ def openai_gpt_facebook_autopost_image():
     return "ok", 200
 
 @facebook_app.route("/stability_facebook_autopost_image")
+@require_job_token
 def stability_facebook_autopost_image():
     """
     Picks a random cartoon and pattern, generates an image with Stability, gets a description with Gemini, and posts both to Facebook.
@@ -148,6 +156,7 @@ def stability_facebook_autopost_image():
     return "ok", 200
 
 @facebook_app.route("/gemini_facebook_autopost_image")
+@require_job_token
 def gemini_facebook_autopost_image():
     """
     Picks a random cartoon and pattern, generates an image with Gemini Imagen, gets a description with Gemini, and posts both to Facebook.
@@ -189,19 +198,28 @@ def openai_gpt_facebook_verify():
     """
     Facebook webhook verification endpoint. Returns the challenge if the verify token matches.
     """
-    challenge = request.args.get('hub.challenge')
-    if FACEBOOK_PAGE_VERIFY_TOKEN == request.args.get('hub.verify_token'):
-        return challenge
-    else:
-        return "Invalid verification token"
+    if module_security.verify_facebook_verify_token(
+        request.args.get('hub.mode'), request.args.get('hub.verify_token'), FACEBOOK_PAGE_VERIFY_TOKEN
+    ):
+        # Plain text so the echoed challenge can never be rendered as HTML
+        return request.args.get('hub.challenge', ''), 200, {"Content-Type": "text/plain"}
+    return "Invalid verification token", 403
 
 @facebook_app.route('/openai_gpt_facebook', methods=['POST'])
 def openai_gpt_facebook_webhook():
     """
     Facebook webhook endpoint for receiving messages. Handles incoming messages and triggers response logic.
     """
-    # print(request.headers)
-    data = request.get_json()
+    # Reject anything that Meta did not sign with our app secret
+    body = request.get_data()
+    if not module_security.verify_facebook_signature(
+        body, request.headers.get("X-Hub-Signature-256"), FACEBOOK_APP_SECRET
+    ):
+        if not FACEBOOK_APP_SECRET:
+            print("FACEBOOK_APP_SECRET is not set; rejecting webhook")
+        return "Invalid signature", 403
+
+    data = json.loads(body)
     print(data)
     if data['object'] == 'page':
         for entry in data['entry']:
