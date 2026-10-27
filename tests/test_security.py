@@ -46,12 +46,19 @@ def test_line_rejects_wrong_signature(client):
     assert r.status_code == 403
 
 
-def test_line_rejects_when_secret_not_configured(client, monkeypatch):
+def test_line_skips_check_when_secret_not_configured(client, monkeypatch, capsys):
     monkeypatch.setattr(handle_line, "LINE_CHANNEL_SECRET", "")
-    body = b'{"events": []}'
-    r = client.post("/openai_gpt_line", data=body, content_type="application/json",
-                    headers={"X-Line-Signature": line_sig(body, "")})
-    assert r.status_code == 403
+    r = client.post("/openai_gpt_line", data=b'{"events": []}', content_type="application/json")
+    assert r.status_code == 200
+    assert "LINE_CHANNEL_SECRET is not set" in capsys.readouterr().out
+
+
+def test_facebook_skips_check_when_secret_not_configured(client, monkeypatch, capsys):
+    monkeypatch.setattr(handle_facebook, "FACEBOOK_APP_SECRET", "")
+    r = client.post("/openai_gpt_facebook", data=b'{"object": "page", "entry": []}',
+                    content_type="application/json")
+    assert r.status_code == 200
+    assert "FACEBOOK_APP_SECRET is not set" in capsys.readouterr().out
 
 
 def test_line_accepts_webhook_verification(client):
@@ -177,10 +184,17 @@ def test_job_endpoints_require_token(client, path):
     assert client.get(path, headers={"X-Job-Token": "wrong"}).status_code == 403
 
 
-@pytest.mark.parametrize("path", JOB_PATHS)
-def test_job_endpoints_reject_when_token_not_configured(client, monkeypatch, path):
+def test_job_endpoint_allowed_when_token_not_configured(client, monkeypatch, capsys):
+    class Res:
+        status_code = 200
+
+        def json(self):
+            return {"id": "page"}
+
     monkeypatch.setenv("JOB_TOKEN", "")
-    assert client.get(path, headers={"X-Job-Token": ""}).status_code == 403
+    monkeypatch.setattr(handle_facebook.requests, "get", lambda *a, **k: Res())
+    assert client.get("/facebook_debug_token").status_code == 200
+    assert "JOB_TOKEN is not set" in capsys.readouterr().out
 
 
 def test_debug_endpoint_runs_with_token_and_hides_token(client, monkeypatch):
