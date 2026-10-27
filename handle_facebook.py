@@ -201,8 +201,12 @@ def openai_gpt_facebook_verify():
     if module_security.verify_facebook_verify_token(
         request.args.get('hub.mode'), request.args.get('hub.verify_token'), FACEBOOK_PAGE_VERIFY_TOKEN
     ):
-        # Plain text so the echoed challenge can never be rendered as HTML
-        return request.args.get('hub.challenge', ''), 200, {"Content-Type": "text/plain"}
+        # Meta sends a numeric challenge; echo it back only as a number, as plain text
+        try:
+            challenge = str(int(request.args.get('hub.challenge', '')))
+        except ValueError:
+            return "Invalid challenge", 400
+        return challenge, 200, {"Content-Type": "text/plain"}
     return "Invalid verification token", 403
 
 @facebook_app.route('/openai_gpt_facebook', methods=['POST'])

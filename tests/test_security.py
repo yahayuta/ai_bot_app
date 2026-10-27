@@ -2,6 +2,7 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 
 import pytest
 
@@ -112,6 +113,45 @@ def test_facebook_verify_token(client):
     assert ok.headers["Content-Type"].startswith("text/plain")
     bad = client.get("/openai_gpt_facebook?hub.mode=subscribe&hub.verify_token=nope&hub.challenge=123")
     assert bad.status_code == 403
+
+
+def test_facebook_verify_rejects_non_numeric_challenge(client):
+    r = client.get("/openai_gpt_facebook?hub.mode=subscribe&hub.verify_token=verify-me&hub.challenge=<script>")
+    assert r.status_code == 400
+    assert b"<script>" not in r.data
+
+
+def test_line_audio_temp_file_does_not_use_user_id(client, monkeypatch):
+    seen = []
+
+    class Content:
+        def iter_content(self):
+            return [b"audio"]
+
+    class Api:
+        def __init__(self, token):
+            pass
+
+        def get_message_content(self, message_id):
+            return Content()
+
+    class Res:
+        def json(self):
+            return {}
+
+    monkeypatch.setattr(handle_line, "LineBotApi", Api)
+    monkeypatch.setattr(handle_line.module_openai, "openai_whisper", lambda path: seen.append(path) or "hi")
+    monkeypatch.setattr(model_chat_log, "save_log", lambda **kw: None)
+    monkeypatch.setattr(handle_line.requests, "post", lambda url, **kw: Res())
+    body = json.dumps({"events": [{
+        "replyToken": "r", "source": {"userId": "../../etc/evil"},
+        "message": {"type": "audio", "id": "1"},
+    }]}).encode()
+    r = client.post("/openai_gpt_line", data=body, content_type="application/json",
+                    headers={"X-Line-Signature": line_sig(body)})
+    assert r.status_code == 200
+    assert seen and "evil" not in seen[0] and seen[0].endswith(".m4a")
+    assert not os.path.exists(seen[0])
 
 
 def test_facebook_verify_rejects_empty_token_config(client, monkeypatch):

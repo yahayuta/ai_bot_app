@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import tempfile
 
 import requests  # type: ignore # HTTP requests for LINE API
 from flask import request, Blueprint  # type: ignore # Flask request object and Blueprint for modular routing
@@ -35,7 +36,9 @@ def _handle_image_generation(text: str, user_id: str, current_time_string: str, 
     Returns:
         Tuple of (response_text, image_url)
     """
-    image_path = f"/tmp/image_{user_id}.png"
+    # Temp file name does not use the user ID, so request data never ends up in a path
+    fd, image_path = tempfile.mkstemp(prefix="image_", suffix=".png")
+    os.close(fd)
     user_prompt = text.replace(command, "").strip()
     
     # Validate prompt
@@ -121,13 +124,16 @@ def openai_gpt_line():
         # Use line sdk library to get audio file
         line_bot_api = LineBotApi(LINE_API_TOKEN)
         message_content = line_bot_api.get_message_content(message_id)
-        file_path = f"/tmp/{user_id}.m4a"
-        with open(file_path, 'wb') as fd:
+        with tempfile.NamedTemporaryFile(suffix=".m4a", delete=False) as fd:
+            file_path = fd.name
             for chunk in message_content.iter_content():
                 fd.write(chunk)
 
         # Trans voice data to text
-        trans_text = module_openai.openai_whisper(file_path)
+        try:
+            trans_text = module_openai.openai_whisper(file_path)
+        finally:
+            os.remove(file_path)
         ai_text = module_openai.openai_chat(text=trans_text, user_id=user_id)
         response_text = f"Q:{trans_text}\nA:{ai_text}"
 

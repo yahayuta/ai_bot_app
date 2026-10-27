@@ -12,5 +12,5 @@ app.register_blueprint(line_app)
 app.register_blueprint(facebook_app)
 
 if __name__ == "__main__":
-    # Run the Flask app in debug mode, listening on all interfaces and configurable port
-    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    # Local run only (Cloud Run uses gunicorn). Debug mode is opt-in: FLASK_DEBUG=1
+    app.run(debug=os.environ.get("FLASK_DEBUG") == "1", host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
