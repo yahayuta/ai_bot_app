@@ -39,6 +39,11 @@ RUN pip install stability-sdk
 RUN pip install google-generativeai
 RUN pip install google-genai pillow
 
+# Fail the build (instead of the running service) if the app cannot be imported,
+# e.g. when a new upstream release leaves protobuf incompatible.
+# A failed build keeps the current revision serving traffic.
+RUN OPENAI_TOKEN=build-check python -c "import main"
+
 # Run the web service on container startup. Here we use the gunicorn
 # webserver, with one worker process and 8 threads.
 # For environments with multiple CPU cores, increase the number of workers
